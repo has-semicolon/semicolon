@@ -55,14 +55,12 @@
 <aside class="w-64 bg-background border-r min-h-screen">
   <div class="p-4">
     <!-- Main Navigation -->
-    <nav class="space-y-1">
+    <nav class="space-y-2">
       {#each menuItems as item (item.id)}
         <button
           class={cn(
-            "w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-            currentPage === item.id
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-accent",
+            "nav-button",
+            currentPage === item.id ? "active" : "",
           )}
           on:click={() => handleNavigate(item.id)}
         >
@@ -94,14 +92,12 @@
       >
         커뮤니티
       </h3>
-      <nav class="space-y-1">
+      <nav class="space-y-2">
         {#each communityItems as item (item.id)}
           <button
             class={cn(
-              "w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              currentPage === item.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent",
+              "nav-button",
+              currentPage === item.id ? "active" : "",
             )}
             on:click={() => handleNavigate(item.id)}
           >
@@ -144,3 +140,36 @@
     </div>
   </div>
 </aside>
+
+<style>
+  .nav-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: background-color 0.15s ease-in-out;
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+    color: inherit;
+  }
+
+  .nav-button:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .nav-button:active {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.dark) .nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :global(.dark) .nav-button:active {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+</style>
