@@ -58,10 +58,7 @@
     <nav class="space-y-2">
       {#each menuItems as item (item.id)}
         <button
-          class={cn(
-            "nav-button",
-            currentPage === item.id ? "active" : "",
-          )}
+          class={cn("nav-button", currentPage === item.id ? "active" : "")}
           on:click={() => handleNavigate(item.id)}
         >
           <svg
@@ -95,10 +92,7 @@
       <nav class="space-y-2">
         {#each communityItems as item (item.id)}
           <button
-            class={cn(
-              "nav-button",
-              currentPage === item.id ? "active" : "",
-            )}
+            class={cn("nav-button", currentPage === item.id ? "active" : "")}
             on:click={() => handleNavigate(item.id)}
           >
             <svg
@@ -155,6 +149,7 @@
     cursor: pointer;
     background-color: transparent;
     color: inherit;
+    text-align: left;
   }
 
   .nav-button:hover {
@@ -163,6 +158,16 @@
 
   .nav-button:active {
     background-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .nav-button.active {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .nav-button.active:hover {
+    background-color: var(--primary);
+    opacity: 0.9;
   }
 
   :global(.dark) .nav-button:hover {
