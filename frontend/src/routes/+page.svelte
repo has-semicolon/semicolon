@@ -1,8 +1,13 @@
 <script>
   import Header from "$lib/components/Header.svelte";
   import Sidebar from "$lib/components/Sidebar.svelte";
+  import HomePage from "$lib/components/HomePage.svelte";
   import QuestionList from "$lib/components/QuestionList.svelte";
   import QuestionDetail from "$lib/components/QuestionDetail.svelte";
+  import TagsPage from "$lib/components/TagsPage.svelte";
+  import UsersPage from "$lib/components/UsersPage.svelte";
+  import GuidelinesPage from "$lib/components/GuidelinesPage.svelte";
+  import HelpPage from "$lib/components/HelpPage.svelte";
   import LoginPage from "$lib/components/LoginPage.svelte";
   import RegisterPage from "$lib/components/RegisterPage.svelte";
 
@@ -87,14 +92,26 @@
         <Sidebar {currentPage} on:navigate={handleNavigate} />
       </div>
 
-      {#if currentPage === "question"}
+      {#if currentPage === "home"}
+        <HomePage on:navigate={handleNavigate} />
+      {:else if currentPage === "questions"}
+        <QuestionList on:navigate={handleNavigate} />
+      {:else if currentPage === "question"}
         <QuestionDetail
           questionId={selectedQuestionId || "1"}
           {currentUser}
           on:navigate={handleNavigate}
         />
+      {:else if currentPage === "tags"}
+        <TagsPage on:navigate={handleNavigate} />
+      {:else if currentPage === "users"}
+        <UsersPage on:navigate={handleNavigate} />
+      {:else if currentPage === "guidelines"}
+        <GuidelinesPage on:navigate={handleNavigate} />
+      {:else if currentPage === "help"}
+        <HelpPage on:navigate={handleNavigate} />
       {:else}
-        <QuestionList on:navigate={handleNavigate} />
+        <HomePage on:navigate={handleNavigate} />
       {/if}
     </div>
   </div>
