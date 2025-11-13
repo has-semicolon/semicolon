@@ -1,0 +1,132 @@
+<script>
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
+
+  const featuredQuestions = [
+    {
+      id: "1",
+      title: "React에서 useState를 사용할 때 비동기 문제를 어떻게 해결하나요?",
+      author: "개발자123",
+      votes: 5,
+      answers: 3,
+      views: 142,
+      tags: ["react", "javascript", "useState"],
+    },
+    {
+      id: "2",
+      title: "SvelteKit에서 서버 사이드 렌더링 최적화 방법",
+      author: "프론트엔드러",
+      votes: 12,
+      answers: 7,
+      views: 289,
+      tags: ["svelte", "sveltekit", "ssr", "performance"],
+    },
+    {
+      id: "3",
+      title: "TypeScript에서 Generic 타입을 효과적으로 사용하는 방법",
+      author: "타입마스터",
+      votes: 8,
+      answers: 5,
+      views: 201,
+      tags: ["typescript", "javascript"],
+    },
+  ];
+
+  function navigateToQuestion(id) {
+    dispatch("navigate", { page: "question", id });
+  }
+
+  function navigateToQuestions() {
+    dispatch("navigate", { page: "questions" });
+  }
+</script>
+
+<main class="flex-1 p-6 overflow-y-auto">
+  <div class="max-w-5xl mx-auto">
+    <!-- Welcome Section -->
+    <section class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">Semicolon에 오신 것을 환영합니다</h1>
+      <p class="text-lg text-muted-foreground mb-6">
+        개발자들이 모여 질문하고 답변을 나누는 커뮤니티입니다.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-card rounded-lg border">
+          <h3 class="text-2xl font-bold text-primary mb-2">1,234</h3>
+          <p class="text-sm text-muted-foreground">질문</p>
+        </div>
+        <div class="p-4 bg-card rounded-lg border">
+          <h3 class="text-2xl font-bold text-primary mb-2">5,678</h3>
+          <p class="text-sm text-muted-foreground">답변</p>
+        </div>
+        <div class="p-4 bg-card rounded-lg border">
+          <h3 class="text-2xl font-bold text-primary mb-2">890</h3>
+          <p class="text-sm text-muted-foreground">사용자</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Questions -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">인기 질문</h2>
+        <button
+          class="text-primary hover:underline text-sm"
+          on:click={navigateToQuestions}
+        >
+          모두 보기 →
+        </button>
+      </div>
+      <div class="space-y-4">
+        {#each featuredQuestions as question (question.id)}
+          <div class="p-4 bg-card rounded-lg border hover:border-primary transition-colors cursor-pointer" on:click={() => navigateToQuestion(question.id)} role="button" tabindex="0" on:keydown={(e) => e.key === 'Enter' && navigateToQuestion(question.id)}>
+            <h3 class="text-lg font-semibold mb-2 hover:text-primary">
+              {question.title}
+            </h3>
+            <div class="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+              <span>{question.author}</span>
+              <span>•</span>
+              <span>투표 {question.votes}</span>
+              <span>•</span>
+              <span>답변 {question.answers}</span>
+              <span>•</span>
+              <span>조회 {question.views}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each question.tags as tag}
+                <span class="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs">
+                  {tag}
+                </span>
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </section>
+
+    <!-- Quick Links -->
+    <section>
+      <h2 class="text-2xl font-bold mb-4">빠른 시작</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          class="p-6 bg-card rounded-lg border hover:border-primary transition-colors text-left"
+          on:click={navigateToQuestions}
+        >
+          <h3 class="text-lg font-semibold mb-2">질문하기</h3>
+          <p class="text-sm text-muted-foreground">
+            궁금한 것이 있나요? 지금 바로 질문해보세요.
+          </p>
+        </button>
+        <button
+          class="p-6 bg-card rounded-lg border hover:border-primary transition-colors text-left"
+          on:click={() => dispatch("navigate", { page: "tags" })}
+        >
+          <h3 class="text-lg font-semibold mb-2">태그 탐색</h3>
+          <p class="text-sm text-muted-foreground">
+            관심 있는 기술 태그를 찾아보세요.
+          </p>
+        </button>
+      </div>
+    </section>
+  </div>
+</main>
