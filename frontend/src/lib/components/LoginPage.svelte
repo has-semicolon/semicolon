@@ -3,10 +3,12 @@
   import Button from "$lib/components/ui/Button.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import { createEventDispatcher } from "svelte";
+  import { login as loginAPI, getCurrentUser } from "$lib/api/auth.js";
+  import { authStore } from "$lib/stores/auth.js";
 
   const dispatch = createEventDispatcher();
 
-  let email = "";
+  let username = "";
   let password = "";
   let isLoading = false;
   let error = "";
@@ -15,8 +17,8 @@
    * 로그인 처리
    */
   async function handleLogin() {
-    if (!email || !password) {
-      error = "이메일과 비밀번호를 모두 입력해주세요.";
+    if (!username || !password) {
+      error = "사용자명과 비밀번호를 모두 입력해주세요.";
       return;
     }
 
@@ -24,20 +26,19 @@
     error = "";
 
     try {
-      // 실제 로그인 API 호출
-      // const response = await loginAPI(email, password);
+      // 로그인 API 호출
+      const tokenData = await loginAPI(username, password);
+      
+      // 사용자 정보 가져오기
+      const user = await getCurrentUser(tokenData.access_token);
 
-      // 임시 로그인 처리
-      const user = {
-        name: email.split("@")[0],
-        email: email,
-        reputation: 100,
-      };
+      // authStore에 저장
+      authStore.login(tokenData.access_token, user);
 
       dispatch("login", user);
       dispatch("navigate", { page: "home" });
     } catch (err) {
-      error = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+      error = err.message || "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.";
     } finally {
       isLoading = false;
     }
@@ -85,14 +86,14 @@
         {/if}
 
         <div class="space-y-2">
-          <label for="email" class="text-sm font-medium text-foreground"
-            >이메일</label
+          <label for="username" class="text-sm font-medium text-foreground"
+            >사용자명</label
           >
           <Input
-            id="email"
-            type="email"
-            placeholder="example@email.com"
-            bind:value={email}
+            id="username"
+            type="text"
+            placeholder="사용자명을 입력하세요"
+            bind:value={username}
             disabled={isLoading}
             on:keydown={handleKeydown}
           />

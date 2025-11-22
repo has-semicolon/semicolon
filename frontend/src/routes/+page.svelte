@@ -11,15 +11,21 @@
   import HelpPage from "$lib/components/HelpPage.svelte";
   import LoginPage from "$lib/components/LoginPage.svelte";
   import RegisterPage from "$lib/components/RegisterPage.svelte";
+  import { authStore } from "$lib/stores/auth.js";
 
   // 전역 상태 관리
   let currentPage = "home";
   let showQuestionForm = false;
   /** @type {string | null} */
   let selectedQuestionId = null;
-  /** @type {{ name: string; email?: string; reputation: number } | null} */
+  /** @type {{ username: string; email?: string; id: number } | null} */
   let currentUser = null;
   let sidebarOpen = false;
+
+  // authStore 구독
+  authStore.subscribe(state => {
+    currentUser = state.user;
+  });
 
   /**
    * 페이지 네비게이션 처리
@@ -68,7 +74,7 @@
    * 로그아웃 처리
    */
   function handleLogout() {
-    currentUser = null;
+    authStore.logout();
     currentPage = "home";
   }
 
@@ -99,6 +105,7 @@
       {currentUser}
       onToggleSidebar={toggleSidebar}
       on:navigate={handleNavigate}
+      on:logout={handleLogout}
     />
 
     <div class="flex min-h-screen">

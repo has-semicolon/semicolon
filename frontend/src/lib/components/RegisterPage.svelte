@@ -3,14 +3,17 @@
   import Button from "$lib/components/ui/Button.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import { createEventDispatcher } from "svelte";
+  import { register as registerAPI, login as loginAPI, getCurrentUser } from "$lib/api/auth.js";
+  import { authStore } from "$lib/stores/auth.js";
 
   const dispatch = createEventDispatcher();
 
   let formData = {
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    full_name: "",
   };
   let isLoading = false;
   /** @type {Record<string, string>} */
@@ -23,10 +26,10 @@
   function validateForm() {
     errors = {};
 
-    if (!formData.name.trim()) {
-      errors.name = "이름을 입력해주세요.";
-    } else if (formData.name.length < 2) {
-      errors.name = "이름은 2자 이상이어야 합니다.";
+    if (!formData.username.trim()) {
+      errors.username = "사용자명을 입력해주세요.";
+    } else if (formData.username.length < 3) {
+      errors.username = "사용자명은 3자 이상이어야 합니다.";
     }
 
     if (!formData.email.trim()) {
@@ -61,20 +64,25 @@
     isLoading = true;
 
     try {
-      // 실제 회원가입 API 호출
-      // const response = await registerAPI(formData);
-
-      // 임시 회원가입 처리
-      const user = {
-        name: formData.name,
+      // 회원가입 API 호출
+      await registerAPI({
+        username: formData.username,
         email: formData.email,
-        reputation: 1,
-      };
+        password: formData.password,
+        full_name: formData.full_name || formData.username,
+      });
+
+      // 회원가입 후 자동 로그인
+      const tokenData = await loginAPI(formData.username, formData.password);
+      const user = await getCurrentUser(tokenData.access_token);
+
+      // authStore에 저장
+      authStore.login(tokenData.access_token, user);
 
       dispatch("login", user);
       dispatch("navigate", { page: "home" });
     } catch (err) {
-      errors.general = "회원가입에 실패했습니다. 다시 시도해주세요.";
+      errors.general = err.message || "회원가입에 실패했습니다. 다시 시도해주세요.";
     } finally {
       isLoading = false;
     }
@@ -124,20 +132,20 @@
         {/if}
 
         <div class="space-y-2">
-          <label for="name" class="text-sm font-medium text-foreground"
-            >이름</label
+          <label for="username" class="text-sm font-medium text-foreground"
+            >사용자명</label
           >
           <Input
-            id="name"
+            id="username"
             type="text"
-            placeholder="이름을 입력하세요"
-            bind:value={formData.name}
+            placeholder="사용자명을 입력하세요 (3자 이상)"
+            bind:value={formData.username}
             disabled={isLoading}
-            className={errors.name ? "border-destructive" : ""}
+            className={errors.username ? "border-destructive" : ""}
             on:keydown={handleKeydown}
           />
-          {#if errors.name}
-            <p class="text-sm text-destructive">{errors.name}</p>
+          {#if errors.username}
+            <p class="text-sm text-destructive">{errors.username}</p>
           {/if}
         </div>
 
