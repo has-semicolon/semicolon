@@ -4,6 +4,7 @@
   import HomePage from "$lib/components/HomePage.svelte";
   import QuestionList from "$lib/components/QuestionList.svelte";
   import QuestionDetail from "$lib/components/QuestionDetail.svelte";
+  import QuestionForm from "$lib/components/QuestionForm.svelte";
   import TagsPage from "$lib/components/TagsPage.svelte";
   import UsersPage from "$lib/components/UsersPage.svelte";
   import GuidelinesPage from "$lib/components/GuidelinesPage.svelte";
@@ -13,6 +14,7 @@
 
   // 전역 상태 관리
   let currentPage = "home";
+  let showQuestionForm = false;
   /** @type {string | null} */
   let selectedQuestionId = null;
   /** @type {{ name: string; email?: string; reputation: number } | null} */
@@ -25,9 +27,33 @@
    */
   function handleNavigate(event) {
     const { page, id } = event.detail;
+    
+    // 질문하기 페이지는 모달로 처리
+    if (page === "ask") {
+      showQuestionForm = true;
+      return;
+    }
+    
     currentPage = page;
     selectedQuestionId = id || null;
     sidebarOpen = false; // 모바일에서 사이드바 닫기
+  }
+
+  /**
+   * 질문 작성 완료 처리
+   */
+  function handleQuestionSubmit(event) {
+    console.log("질문 작성 완료:", event.detail);
+    showQuestionForm = false;
+    // 질문 목록 페이지로 이동
+    currentPage = "questions";
+  }
+
+  /**
+   * 질문 작성 취소
+   */
+  function handleQuestionCancel() {
+    showQuestionForm = false;
   }
 
   /**
@@ -115,4 +141,12 @@
       {/if}
     </div>
   </div>
+{/if}
+
+<!-- 질문 작성 모달 -->
+{#if showQuestionForm}
+  <QuestionForm 
+    on:submit={handleQuestionSubmit} 
+    on:cancel={handleQuestionCancel} 
+  />
 {/if}

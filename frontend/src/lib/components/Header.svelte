@@ -31,7 +31,7 @@
 
 <header class="border-b bg-background sticky top-0 z-50">
   <div class="container mx-auto px-4 py-3">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-4">
       <!-- Mobile Menu & Logo -->
       <div class="flex items-center space-x-2">
         <Button
@@ -68,16 +68,23 @@
           >
             ;
           </div>
-          <span class="font-bold text-lg">Semicolon</span>
+          <span class="font-bold text-lg whitespace-nowrap">Semicolon</span>
         </div>
       </div>
 
       <!-- Search Bar -->
-      <div class="flex-1 max-w-md mx-4 sm:mx-8">
+      <div class="max-w-md w-full hidden md:block">
         <div class="relative">
+          <Input
+            type="search"
+            placeholder="질문 검색..."
+            className="pr-10"
+            bind:value={searchValue}
+          />
+          <div style="padding-right: 2.5rem;"></div>
           <!-- Search Icon -->
           <svg
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -89,12 +96,6 @@
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
-          <Input
-            type="search"
-            placeholder="질문 검색..."
-            className="pl-10"
-            bind:value={searchValue}
-          />
         </div>
       </div>
 
