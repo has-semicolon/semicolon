@@ -33,6 +33,10 @@
     },
   ];
 
+  /**
+   * 질문 상세 페이지로 이동
+   * @param {string} id - 질문 ID
+   */
   function navigateToQuestion(id) {
     dispatch("navigate", { page: "question", id });
   }

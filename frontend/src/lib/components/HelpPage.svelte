@@ -83,8 +83,14 @@
     },
   ];
 
+  /** @type {Record<string, boolean>} */
   let expandedIndex = {};
 
+  /**
+   * FAQ 아코디언 토글
+   * @param {number} categoryIndex - 카테고리 인덱스
+   * @param {number} questionIndex - 질문 인덱스
+   */
   function toggleFaq(categoryIndex, questionIndex) {
     const key = `${categoryIndex}-${questionIndex}`;
     expandedIndex[key] = !expandedIndex[key];

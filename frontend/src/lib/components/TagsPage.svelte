@@ -24,6 +24,10 @@
     tag.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /**
+   * 태그 클릭 핸들러
+   * @param {string} tagName - 태그 이름
+   */
   function handleTagClick(tagName) {
     dispatch("navigate", { page: "questions", tag: tagName });
   }

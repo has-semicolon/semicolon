@@ -18,7 +18,16 @@
   let showQuestionForm = false;
   /** @type {string | null} */
   let selectedQuestionId = null;
-  /** @type {{ username: string; email?: string; id: number } | null} */
+  /**
+   * @typedef {Object} User
+   * @property {number} id
+   * @property {string} username
+   * @property {string} email
+   * @property {string} [full_name]
+   * @property {boolean} is_active
+   */
+
+  /** @type {User | null} */
   let currentUser = null;
   let sidebarOpen = false;
 
@@ -47,6 +56,7 @@
 
   /**
    * 질문 작성 완료 처리
+   * @param {CustomEvent} event - 질문 제출 이벤트
    */
   function handleQuestionSubmit(event) {
     console.log("질문 작성 완료:", event.detail);

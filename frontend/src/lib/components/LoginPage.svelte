@@ -28,17 +28,19 @@
     try {
       // 로그인 API 호출
       const tokenData = await loginAPI(username, password);
+      const token = /** @type {any} */ (tokenData).access_token;
       
       // 사용자 정보 가져오기
-      const user = await getCurrentUser(tokenData.access_token);
+      const user = await getCurrentUser(token);
 
       // authStore에 저장
-      authStore.login(tokenData.access_token, user);
+      authStore.login(token, user);
 
       dispatch("login", user);
       dispatch("navigate", { page: "home" });
     } catch (err) {
-      error = err.message || "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.";
+      const errorMessage = /** @type {Error} */ (err).message;
+      error = errorMessage || "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.";
     } finally {
       isLoading = false;
     }
