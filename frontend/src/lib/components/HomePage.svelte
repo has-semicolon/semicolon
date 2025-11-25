@@ -94,9 +94,15 @@
             </div>
             <div class="flex flex-wrap gap-2">
               {#each question.tags as tag}
-                <span class="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs">
+                <button
+                  class="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    dispatch("navigate", { page: "questions", tag });
+                  }}
+                >
                   {tag}
-                </span>
+                </button>
               {/each}
             </div>
           </div>

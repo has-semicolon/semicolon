@@ -1,5 +1,4 @@
 <script>
-  import Card from "$lib/components/ui/Card.svelte";
   import Badge from "$lib/components/ui/Badge.svelte";
   import { createEventDispatcher } from "svelte";
 
@@ -48,9 +47,12 @@
   }
 </script>
 
-<Card
-  className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+<div
+  class="p-4 hover:shadow-md transition-shadow cursor-pointer bg-card border rounded-lg"
   on:click={handleQuestionClick}
+  on:keydown={(e) => e.key === 'Enter' && handleQuestionClick()}
+  role="button"
+  tabindex="0"
 >
   <div class="flex items-start space-x-4">
     <!-- Stats Column -->
@@ -87,12 +89,19 @@
       <!-- Tags -->
       <div class="flex flex-wrap gap-1 mb-3">
         {#each question.tags as tag (tag)}
-          <Badge
-            variant="secondary"
-            className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200"
+          <button
+            on:click={(e) => {
+              e.stopPropagation();
+              dispatch("navigate", { page: "questions", tag });
+            }}
           >
-            {tag}
-          </Badge>
+            <Badge
+              variant="secondary"
+              className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
+            >
+              {tag}
+            </Badge>
+          </button>
         {/each}
       </div>
 
@@ -114,7 +123,7 @@
       </div>
     </div>
   </div>
-</Card>
+</div>
 
 <style>
   .line-clamp-2 {

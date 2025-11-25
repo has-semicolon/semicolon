@@ -7,7 +7,14 @@
   /** @type {string} */
   export let questionId;
 
-  /** @type {Object | null} */
+  /**
+   * @typedef {Object} User
+   * @property {number} id
+   * @property {string} username
+   * @property {string} [full_name]
+   */
+
+  /** @type {User | null} */
   export let currentUser = null;
 
   const dispatch = createEventDispatcher();
@@ -80,6 +87,20 @@ console.log(newCount); // 새로운 값
       createdAt: "2024-01-15T11:15:00Z",
       votes: 8,
       isAccepted: true,
+      comments: [
+        {
+          id: "c1",
+          content: "useEffect를 사용하는 방법이 가장 일반적이네요. 감사합니다!",
+          author: "초보개발자",
+          createdAt: "2024-01-15T11:30:00Z",
+        },
+        {
+          id: "c2",
+          content: "함수형 업데이트 방법을 몰랐는데 유용할 것 같습니다.",
+          author: "개발자123",
+          createdAt: "2024-01-15T11:45:00Z",
+        },
+      ],
     },
     {
       id: "2",
@@ -102,11 +123,16 @@ const handleClick = () => {
       createdAt: "2024-01-15T12:30:00Z",
       votes: 3,
       isAccepted: false,
+      comments: [],
     },
   ];
 
   let newAnswerContent = "";
   let userVote = 0; // -1: downvote, 0: no vote, 1: upvote
+  /** @type {Record<string, boolean>} */
+  let showCommentForm = {}; // 답변별 댓글 폼 표시 여부
+  /** @type {Record<string, string>} */
+  let newCommentContent = {}; // 답변별 댓글 내용
 
   /**
    * 투표 처리
@@ -136,6 +162,47 @@ const handleClick = () => {
     // 답변 제출 로직
     console.log("답변 제출:", newAnswerContent);
     newAnswerContent = "";
+  }
+
+  /**
+   * 댓글 폼 토글
+   * @param {string} answerId - 답변 ID
+   */
+  function toggleCommentForm(answerId) {
+    if (!currentUser) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    showCommentForm[answerId] = !showCommentForm[answerId];
+  }
+
+  /**
+   * 댓글 제출
+   * @param {string} answerId - 답변 ID
+   */
+  function handleSubmitComment(answerId) {
+    if (!newCommentContent[answerId]?.trim()) {
+      alert("댓글 내용을 입력해주세요.");
+      return;
+    }
+
+    // 댓글 제출 로직
+    console.log(`답변 ${answerId}에 댓글 제출:`, newCommentContent[answerId]);
+    
+    // 댓글 추가 (실제로는 API 호출 후 업데이트)
+    const answer = answers.find(a => a.id === answerId);
+    if (answer && currentUser) {
+      const username = (currentUser).username || (currentUser).full_name || "사용자";
+      answer.comments = [...answer.comments, {
+        id: `c${Date.now()}`,
+        content: newCommentContent[answerId],
+        author: username,
+        createdAt: new Date().toISOString(),
+      }];
+    }
+
+    newCommentContent[answerId] = "";
+    showCommentForm[answerId] = false;
   }
 
   /**
@@ -346,6 +413,72 @@ const handleClick = () => {
                   </div>
                 </div>
               </div>
+
+              <!-- Comments Section -->
+              {#if answer.comments && answer.comments.length > 0}
+                <div class="mt-4 space-y-2 border-t border-border pt-4">
+                  {#each answer.comments as comment (comment.id)}
+                    <div class="flex items-start space-x-2 text-sm">
+                      <div class="flex-1 bg-muted/50 rounded px-3 py-2">
+                        <span class="text-foreground">{comment.content}</span>
+                        <span class="text-muted-foreground mx-2">–</span>
+                        <button
+                          class="text-primary hover:underline font-medium"
+                          on:click={() => handleNavigate("profile")}
+                        >
+                          {comment.author}
+                        </button>
+                        <span class="text-muted-foreground text-xs ml-2">
+                          {formatRelativeTime(comment.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+
+              <!-- Add Comment Button -->
+              <div class="mt-3">
+                <button
+                  class="text-sm text-muted-foreground hover:text-primary"
+                  on:click={() => toggleCommentForm(answer.id)}
+                >
+                  댓글 추가
+                </button>
+              </div>
+
+              <!-- Comment Form -->
+              {#if showCommentForm[answer.id]}
+                <div class="mt-3 flex items-start space-x-2">
+                  <input
+                    type="text"
+                    bind:value={newCommentContent[answer.id]}
+                    placeholder="댓글을 입력하세요..."
+                    class="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    on:keydown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSubmitComment(answer.id);
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    on:click={() => handleSubmitComment(answer.id)}
+                  >
+                    등록
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    on:click={() => {
+                      showCommentForm[answer.id] = false;
+                      newCommentContent[answer.id] = "";
+                    }}
+                  >
+                    취소
+                  </Button>
+                </div>
+              {/if}
             </div>
           </div>
         </Card>
