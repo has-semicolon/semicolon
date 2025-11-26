@@ -75,7 +75,8 @@
       // 회원가입 후 자동 로그인
       const tokenData = await loginAPI(formData.username, formData.password);
       const token = /** @type {any} */ (tokenData).access_token;
-      const user = await getCurrentUser(token);
+      const userResponse = await getCurrentUser(token);
+      const user = /** @type {any} */ (userResponse).data;
 
       // authStore에 저장
       authStore.login(token, user);

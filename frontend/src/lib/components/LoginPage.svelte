@@ -31,7 +31,8 @@
       const token = /** @type {any} */ (tokenData).access_token;
       
       // 사용자 정보 가져오기
-      const user = await getCurrentUser(token);
+      const userResponse = await getCurrentUser(token);
+      const user = /** @type {any} */ (userResponse).data;
 
       // authStore에 저장
       authStore.login(token, user);
