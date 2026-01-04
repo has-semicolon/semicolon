@@ -1,9 +1,11 @@
 <script>
+  // svelte dispatcher 쓰기
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
-  const faqs = [
+  // faq 데이터
+  const faq_list = [
     {
       category: "시작하기",
       questions: [
@@ -83,18 +85,15 @@
     },
   ];
 
+  // 열림 상태
   /** @type {Record<string, boolean>} */
-  let expandedIndex = {};
+  let open = {};
 
-  /**
-   * FAQ 아코디언 토글
-   * @param {number} categoryIndex - 카테고리 인덱스
-   * @param {number} questionIndex - 질문 인덱스
-   */
-  function toggleFaq(categoryIndex, questionIndex) {
-    const key = `${categoryIndex}-${questionIndex}`;
-    expandedIndex[key] = !expandedIndex[key];
-    expandedIndex = expandedIndex; // trigger reactivity
+  // 아코디언 토글
+  function toggle_faq(cat_i, q_i) {
+    const k = `${cat_i}-${q_i}`;
+    open[k] = !open[k];
+    open = open; // svelte 반응성 트리거
   }
 </script>
 
@@ -107,21 +106,21 @@
       </p>
     </div>
 
-    <!-- FAQ Sections -->
+    <!-- faq 섹션 -->
     <div class="space-y-6">
-      {#each faqs as category, categoryIndex (category.category)}
+      {#each faq_list as cat, cat_i (cat.category)}
         <div class="p-6 bg-card rounded-lg border">
           <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
             <span class="w-2 h-8 bg-primary rounded"></span>
-            {category.category}
+            {cat.category}
           </h2>
           <div class="space-y-3">
-            {#each category.questions as faq, questionIndex (faq.q)}
-              {@const key = `${categoryIndex}-${questionIndex}`}
+            {#each cat.questions as item, q_i (item.q)}
+              {@const k = `${cat_i}-${q_i}`}
               <div class="p-4 bg-card rounded-lg border shadow-sm hover:border-primary/30 transition-colors">
                 <button
                   class="w-full text-left group"
-                  on:click={() => toggleFaq(categoryIndex, questionIndex)}
+                  on:click={() => toggle_faq(cat_i, q_i)}
                 >
                   <div class="flex items-start justify-between gap-4">
                     <h3 class="font-semibold group-hover:text-primary transition-colors flex items-center gap-2">
@@ -138,10 +137,10 @@
                           d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {faq.q}
+                      {item.q}
                     </h3>
                     <svg
-                      class="w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform {expandedIndex[key] ? 'rotate-180' : ''}"
+                      class="w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform {open[k] ? 'rotate-180' : ''}"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -155,9 +154,9 @@
                     </svg>
                   </div>
                 </button>
-                {#if expandedIndex[key]}
+                {#if open[k]}
                   <div class="mt-3 pt-3 border-t text-muted-foreground leading-relaxed">
-                    {faq.a}
+                    {item.a}
                   </div>
                 {/if}
               </div>
@@ -167,7 +166,7 @@
       {/each}
     </div>
 
-    <!-- Quick Links Section -->
+    <!-- 빠른 링크 -->
     <div class="mt-8 p-6 bg-card rounded-lg border">
       <h3 class="text-xl font-bold mb-4">빠른 링크</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -238,7 +237,7 @@
       </div>
     </div>
 
-    <!-- Contact Section -->
+    <!-- 문의 섹션 -->
     <div class="mt-8 p-6 bg-primary/10 rounded-lg border border-primary">
       <h3 class="text-xl font-bold mb-3">답변을 찾지 못하셨나요?</h3>
       <p class="text-muted-foreground mb-4">

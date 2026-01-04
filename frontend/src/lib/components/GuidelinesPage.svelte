@@ -1,9 +1,11 @@
 <script>
+  // svelte dispatcher 쓰기
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
-  const guidelines = [
+  // 가이드라인 내용
+  const guide_list = [
     {
       title: "질문하기 전에",
       items: [
@@ -64,15 +66,16 @@
       </p>
     </div>
 
+    <!-- 가이드 목록 -->
     <div class="space-y-6">
-      {#each guidelines as section (section.title)}
+      {#each guide_list as sec (sec.title)}
         <div class="p-6 bg-card rounded-lg border">
           <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
             <span class="w-2 h-8 bg-primary rounded"></span>
-            {section.title}
+            {sec.title}
           </h2>
           <ul class="space-y-3">
-            {#each section.items as item}
+            {#each sec.items as txt}
               <li class="flex items-start gap-3">
                 <svg
                   class="w-5 h-5 text-primary mt-0.5 flex-shrink-0"
@@ -87,7 +90,7 @@
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span class="text-base">{item}</span>
+                <span class="text-base">{txt}</span>
               </li>
             {/each}
           </ul>

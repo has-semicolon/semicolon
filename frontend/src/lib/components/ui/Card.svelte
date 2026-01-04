@@ -1,12 +1,12 @@
 <script>
   import { cn } from "$lib/utils.js";
 
-  /** @type {string} */
+  // 추가 클래스
   export let className = "";
 
-  $: cardClass = cn("card", className);
+  $: card_class = cn("card", className);
 </script>
 
-<div class={cardClass} {...$$restProps}>
+<div class={card_class} {...$$restProps}>
   <slot />
 </div>

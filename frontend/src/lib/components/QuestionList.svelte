@@ -5,16 +5,13 @@
 
   const dispatch = createEventDispatcher();
 
-  /**
-   * 네비게이션 이벤트 전달
-   * @param {CustomEvent} event - 네비게이션 이벤트
-   */
-  function handleNavigate(event) {
+  // 네비게이션 이벤트 전달하는 함수
+  function on_nav(event) {
     dispatch("navigate", event.detail);
   }
 
-  // 샘플 데이터
-  const questions = [
+  // 샘플 데이터 (나중에 api에서 받아올거임)
+  const q_list = [
     {
       id: "1",
       title: "React에서 useState를 사용할 때 비동기 문제를 어떻게 해결하나요?",
@@ -82,16 +79,17 @@
     },
   ];
 
-  let sortBy = "newest";
-  const sortOptions = [
+  let sort_type = "newest";
+  const sort_list = [
     { value: "newest", label: "최신순" },
     { value: "votes", label: "투표순" },
     { value: "answers", label: "답변순" },
     { value: "views", label: "조회순" },
   ];
 
-  $: sortedQuestions = [...questions].sort((a, b) => {
-    switch (sortBy) {
+  // 정렬된 질문 목록 (sort_type 바뀌면 자동으로 재계산)
+  $: sorted_list = [...q_list].sort((a, b) => {
+    switch (sort_type) {
       case "votes":
         return b.votes - a.votes;
       case "answers":
@@ -125,31 +123,31 @@
       </Button>
     </div>
 
-    <!-- Filters and Sort -->
+    <!-- 필터랑 정렬 -->
     <div class="flex items-center justify-between mb-6 pb-4 border-b">
       <div class="flex items-center space-x-4">
         <span class="text-sm text-muted-foreground">
-          총 {questions.length}개의 질문
+          총 {q_list.length}개의 질문
         </span>
       </div>
 
       <div class="flex items-center space-x-2">
         <span class="text-sm text-muted-foreground">정렬:</span>
         <select
-          bind:value={sortBy}
+          bind:value={sort_type}
           class="text-sm border border-input rounded-md px-3 py-1 bg-background"
         >
-          {#each sortOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
+          {#each sort_list as opt (opt.value)}
+            <option value={opt.value}>{opt.label}</option>
           {/each}
         </select>
       </div>
     </div>
 
-    <!-- Question List -->
+    <!-- 질문 리스트 -->
     <div class="space-y-4">
-      {#each sortedQuestions as question (question.id)}
-        <QuestionCard {question} on:navigate={handleNavigate} />
+      {#each sorted_list as q (q.id)}
+        <QuestionCard question={q} on:navigate={on_nav} />
       {/each}
     </div>
 

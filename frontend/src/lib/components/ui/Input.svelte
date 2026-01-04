@@ -1,22 +1,22 @@
 <script>
   import { cn } from "$lib/utils.js";
 
-  /** @type {string} */
+  // input 타입
   export let type = "text";
-  /** @type {string} */
+  // 플레이스홀더
   export let placeholder = "";
-  /** @type {string} */
+  // 값
   export let value = "";
-  /** @type {string} */
+  // 추가 클래스
   export let className = "";
-  /** @type {boolean} */
+  // 비활성화
   export let disabled = false;
 
-  $: inputClass = cn("input", className);
+  $: input_class = cn("input", className);
 </script>
 
 <input
-  class={inputClass}
+  class={input_class}
   {type}
   {placeholder}
   bind:value
