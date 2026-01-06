@@ -180,6 +180,18 @@ const handleClick = () => {
     if (diff_h < 168) return `${Math.floor(diff_h / 24)}일 전`;
     return date.toLocaleDateString("ko-KR");
   }
+
+  // author 처리 (객체 또는 문자열)
+  $: author_name = q_data && (typeof q_data.author === 'string' 
+    ? q_data.author 
+    : q_data.author?.username || '익명');
+  
+  // 생성 시간
+  $: created_time = q_data && (q_data.createdAt || q_data.created_at);
+  
+  // 태그
+  $: tags = q_data?.tags || [];
+
 </script>
 
 <main class="flex-1 p-6">
@@ -203,6 +215,31 @@ const handleClick = () => {
       <span class="text-foreground">질문 상세</span>
     </nav>
 
+    <!-- 로딩 중 -->
+    {#if loading}
+      <div class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p class="text-muted-foreground">질문을 불러오는 중...</p>
+        </div>
+      </div>
+    {:else if error}
+      <!-- 에러 발생 -->
+      <div class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <p class="text-destructive mb-4">❌ {error}</p>
+          <Button on:click={() => load_question()}>다시 시도</Button>
+        </div>
+      </div>
+    {:else if !q_data}
+      <!-- 질문이 없음 -->
+      <div class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <p class="text-muted-foreground mb-4">질문을 찾을 수 없습니다.</p>
+          <Button on:click={() => go_to("questions")}>질문 목록으로</Button>
+        </div>
+      </div>
+    {:else}
     <!-- 질문 -->
     <Card className="p-6 mb-6">
       <div class="flex items-start space-x-4">
@@ -217,7 +254,7 @@ const handleClick = () => {
               <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
             </svg>
           </button>
-          <span class="text-lg font-medium">{q_data.votes + my_vote}</span>
+          <span class="text-lg font-medium">{(q_data.votes || 0) + my_vote}</span>
           <button
             class={`p-1 rounded hover:bg-accent ${my_vote === -1 ? "text-orange-500" : "text-muted-foreground"}`}
             on:click={() => do_vote(-1)}
@@ -251,7 +288,7 @@ const handleClick = () => {
 
           <!-- 태그 -->
           <div class="flex flex-wrap gap-2 mb-4">
-            {#each q_data.tags as tag (tag)}
+            {#each tags as tag (tag)}
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                 {tag}
               </Badge>
@@ -263,20 +300,19 @@ const handleClick = () => {
             class="flex items-center justify-between text-sm text-muted-foreground"
           >
             <div class="flex items-center space-x-4">
-              <span>조회 {q_data.views}</span>
-              <span>{get_time(q_data.createdAt)}에 질문됨</span>
+              <span>{get_time(created_time)}에 질문됨</span>
             </div>
             <div class="flex items-center space-x-2">
               <div
                 class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center"
               >
                 <span class="text-sm font-medium text-primary">
-                  {q_data.author.charAt(0).toUpperCase()}
+                  {author_name.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <div class="font-medium text-foreground">{q_data.author}</div>
-                <div class="text-xs">평판 {q_data.author_point}</div>
+                <div class="font-medium text-foreground">{author_name}</div>
+                <div class="text-xs">평판 {q_data.author_point || 0}</div>
               </div>
             </div>
           </div>
@@ -467,5 +503,6 @@ const handleClick = () => {
         </div>
       {/if}
     </Card>
+    {/if}
   </div>
 </main>
