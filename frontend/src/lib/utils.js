@@ -1,8 +1,4 @@
-/**
- * Utility function to merge class names
- * @param {...string} classes - Class names to merge
- * @returns {string} Merged class names
- */
+// 클래스명 합쳐주는 함수
 export function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }

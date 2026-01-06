@@ -2,18 +2,19 @@
   import Badge from "$lib/components/ui/Badge.svelte";
   import { createEventDispatcher } from "svelte";
 
+  // 질문 데이터 타입
   /**
    * @typedef {Object} Question
-   * @property {string} id - 질문 ID
-   * @property {string} title - 질문 제목
-   * @property {string} content - 질문 내용
-   * @property {string} author - 작성자
-   * @property {string} createdAt - 작성일
-   * @property {number} views - 조회수
-   * @property {number} answers - 답변수
-   * @property {number} votes - 투표수
-   * @property {string[]} tags - 태그 목록
-   * @property {boolean} hasAcceptedAnswer - 채택된 답변 여부
+   * @property {string} id
+   * @property {string} title
+   * @property {string} content
+   * @property {string} author
+   * @property {string} createdAt
+   * @property {number} views
+   * @property {number} answers
+   * @property {number} votes
+   * @property {string[]} tags
+   * @property {boolean} hasAcceptedAnswer
    */
 
   /** @type {Question} */
@@ -21,36 +22,30 @@
 
   const dispatch = createEventDispatcher();
 
-  /**
-   * 질문 클릭 이벤트 처리
-   */
-  function handleQuestionClick() {
+  // 질문 클릭하면 상세페이지로
+  function on_click() {
     dispatch("navigate", { page: "question", id: question.id });
   }
 
-  /**
-   * 시간을 상대적 형식으로 변환
-   * @param {string} dateString - 날짜 문자열
-   * @returns {string} 상대적 시간 표현
-   */
-  function formatRelativeTime(dateString) {
-    const date = new Date(dateString);
+  // 시간 포맷 변환 (몇시간 전, 며칠 전 이런식으로)
+  function get_time_text(date_str) {
+    const date = new Date(date_str);
     const now = new Date();
-    const diffInHours = Math.floor(
+    const diff_hours = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60 * 60),
     );
 
-    if (diffInHours < 1) return "방금 전";
-    if (diffInHours < 24) return `${diffInHours}시간 전`;
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}일 전`;
+    if (diff_hours < 1) return "방금 전";
+    if (diff_hours < 24) return `${diff_hours}시간 전`;
+    if (diff_hours < 168) return `${Math.floor(diff_hours / 24)}일 전`;
     return date.toLocaleDateString("ko-KR");
   }
 </script>
 
 <div
   class="p-4 hover:shadow-md transition-shadow cursor-pointer bg-card border rounded-lg"
-  on:click={handleQuestionClick}
-  on:keydown={(e) => e.key === 'Enter' && handleQuestionClick()}
+  on:click={on_click}
+  on:keydown={(e) => e.key === 'Enter' && on_click()}
   role="button"
   tabindex="0"
 >
@@ -119,7 +114,7 @@
           </div>
           <span>{question.author}</span>
         </div>
-        <span>{formatRelativeTime(question.createdAt)}</span>
+        <span>{get_time_text(question.createdAt)}</span>
       </div>
     </div>
   </div>

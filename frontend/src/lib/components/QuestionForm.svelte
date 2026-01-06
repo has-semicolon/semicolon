@@ -3,56 +3,56 @@
 
   const dispatch = createEventDispatcher();
 
-  let title = "";
-  let content = "";
-  let tags = "";
-  let isSubmitting = false;
+  // 입력값들
+  let q_title = "";
+  let q_content = "";
+  let q_tags = "";
+  let is_sending = false;
 
-  function handleCancel() {
+  // 취소 버튼
+  function on_cancel() {
     dispatch("cancel");
   }
 
-  async function handleSubmit() {
-    // 유효성 검사
-    if (!title.trim()) {
+  // 제출 버튼
+  async function on_submit() {
+    // 체크
+    if (!q_title.trim()) {
       alert("제목을 입력해주세요.");
       return;
     }
-    if (!content.trim()) {
+    if (!q_content.trim()) {
       alert("내용을 입력해주세요.");
       return;
     }
 
-    isSubmitting = true;
+    is_sending = true;
 
     try {
-      // 태그를 배열로 변환 (쉼표나 공백으로 구분)
-      const tagArray = tags
+      // 태그 배열로 만들기 (쉼표나 공백으로 구분)
+      const tag_arr = q_tags
         .split(/[,\s]+/)
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
 
-      const questionData = {
-        title: title.trim(),
-        content: content.trim(),
-        tags: tagArray,
+      const data = {
+        title: q_title.trim(),
+        content: q_content.trim(),
+        tags: tag_arr,
       };
 
-      // TODO: 나중에 백엔드 연결 시
+      // TODO: 나중에 백엔드 연결할때
       // POST /api/v1/questions/
-      // Body: { title, content, tags }
-      // Headers: { Authorization: Bearer <token> }
 
-      console.log("질문 데이터:", questionData);
+      console.log("질문 데이터:", data);
 
-      // 임시: 성공 메시지
       alert("질문이 작성되었습니다!");
-      dispatch("submit", questionData);
-    } catch (error) {
-      console.error("질문 작성 실패:", error);
+      dispatch("submit", data);
+    } catch (e) {
+      console.error("질문 작성 실패:", e);
       alert("질문 작성에 실패했습니다. 다시 시도해주세요.");
     } finally {
-      isSubmitting = false;
+      is_sending = false;
     }
   }
 </script>
@@ -66,7 +66,7 @@
       </p>
     </div>
 
-    <form on:submit|preventDefault={handleSubmit} class="p-6 space-y-6">
+    <form on:submit|preventDefault={on_submit} class="p-6 space-y-6">
       <!-- 제목 -->
       <div>
         <label for="title" class="block text-sm font-medium mb-2">
@@ -75,14 +75,14 @@
         <input
           id="title"
           type="text"
-          bind:value={title}
+          bind:value={q_title}
           placeholder="질문의 핵심을 간단명료하게 작성해주세요"
           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           maxlength="200"
           required
         />
         <p class="text-xs text-muted-foreground mt-1">
-          {title.length}/200
+          {q_title.length}/200
         </p>
       </div>
 
@@ -93,7 +93,7 @@
         </label>
         <textarea
           id="content"
-          bind:value={content}
+          bind:value={q_content}
           placeholder="문제 상황, 시도해본 방법, 기대하는 결과 등을 자세히 설명해주세요.&#10;&#10;코드를 포함할 경우 백틱(```)을 사용하여 코드 블록으로 감싸주세요."
           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[300px] resize-y"
           required
@@ -111,7 +111,7 @@
         <input
           id="tags"
           type="text"
-          bind:value={tags}
+          bind:value={q_tags}
           placeholder="javascript, react, typescript (쉼표 또는 공백으로 구분)"
           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         />
@@ -136,18 +136,18 @@
       <div class="flex gap-3 justify-end pt-4 border-t">
         <button
           type="button"
-          on:click={handleCancel}
+          on:click={on_cancel}
           class="px-4 py-2 border rounded-md hover:bg-accent transition-colors"
-          disabled={isSubmitting}
+          disabled={is_sending}
         >
           취소
         </button>
         <button
           type="submit"
           class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting}
+          disabled={is_sending}
         >
-          {isSubmitting ? "작성 중..." : "질문 올리기"}
+          {is_sending ? "작성 중..." : "질문 올리기"}
         </button>
       </div>
     </form>
