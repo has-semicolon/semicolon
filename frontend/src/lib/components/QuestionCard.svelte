@@ -4,17 +4,27 @@
 
   // 질문 데이터 타입
   /**
+   * @typedef {Object} Author
+   * @property {number} id
+   * @property {string} username
+   * @property {string} email
+   * @property {string} [full_name]
+   */
+
+  /**
    * @typedef {Object} Question
-   * @property {string} id
+   * @property {number} id
    * @property {string} title
    * @property {string} content
-   * @property {string} author
-   * @property {string} createdAt
+   * @property {Author|string} author - Author 객체 또는 username 문자열
+   * @property {string} created_at
    * @property {number} views
-   * @property {number} answers
-   * @property {number} votes
-   * @property {string[]} tags
-   * @property {boolean} hasAcceptedAnswer
+   * @property {number} [answers_count] - 답변 수
+   * @property {Array} [answers] - 답변 배열
+   * @property {number} [votes]
+   * @property {Array<string>} [tags]
+   * @property {boolean} [hasAcceptedAnswer]
+   * @property {boolean} [is_solved]
    */
 
   /** @type {Question} */
@@ -40,6 +50,26 @@
     if (diff_hours < 168) return `${Math.floor(diff_hours / 24)}일 전`;
     return date.toLocaleDateString("ko-KR");
   }
+
+  // author가 객체인지 문자열인지 확인
+  $: author_name = typeof question.author === 'string' 
+    ? question.author 
+    : question.author?.username || '익명';
+  
+  // 답변 개수
+  $: answers_count = question.answers_count || question.answers?.length || 0;
+  
+  // 투표 수
+  $: votes = question.votes || 0;
+  
+  // 태그 배열
+  $: tags = question.tags || [];
+  
+  // 채택된 답변 여부
+  $: has_accepted = question.hasAcceptedAnswer || question.is_solved || false;
+  
+  // 생성 시간 (createdAt 또는 created_at)
+  $: created_time = question.createdAt || question.created_at;
 </script>
 
 <div
@@ -55,20 +85,16 @@
       class="flex flex-col items-center space-y-2 text-sm text-muted-foreground min-w-[60px]"
     >
       <div class="text-center">
-        <div class="font-medium text-foreground">{question.votes}</div>
+        <div class="font-medium text-foreground">{votes}</div>
         <div>투표</div>
       </div>
       <div class="text-center">
         <div
-          class={`font-medium ${question.hasAcceptedAnswer ? "text-green-600" : "text-foreground"}`}
+          class={`font-medium ${has_accepted ? "text-green-600" : "text-foreground"}`}
         >
-          {question.answers}
+          {answers_count}
         </div>
         <div>답변</div>
-      </div>
-      <div class="text-center">
-        <div class="font-medium text-foreground">{question.views}</div>
-        <div>조회</div>
       </div>
     </div>
 
@@ -83,7 +109,7 @@
 
       <!-- Tags -->
       <div class="flex flex-wrap gap-1 mb-3">
-        {#each question.tags as tag (tag)}
+        {#each tags as tag (tag)}
           <button
             on:click={(e) => {
               e.stopPropagation();
@@ -109,12 +135,12 @@
             class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center"
           >
             <span class="text-xs font-medium text-primary">
-              {question.author.charAt(0).toUpperCase()}
+              {author_name.charAt(0).toUpperCase()}
             </span>
           </div>
-          <span>{question.author}</span>
+          <span>{author_name}</span>
         </div>
-        <span>{get_time_text(question.createdAt)}</span>
+        <span>{get_time_text(created_time)}</span>
       </div>
     </div>
   </div>
