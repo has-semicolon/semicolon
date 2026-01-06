@@ -1,62 +1,61 @@
 <script>
+  // ui 컴포넌트들
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import { createEventDispatcher } from "svelte";
+  import { login as loginAPI, get_me } from "$lib/api/auth.js";
+  import { authStore } from "$lib/stores/auth.js";
 
   const dispatch = createEventDispatcher();
 
-  let email = "";
-  let password = "";
-  let isLoading = false;
-  let error = "";
+  // 입력값들
+  let user_name = "";
+  let pw = "";
+  let is_loading = false;
+  let err_msg = "";
 
-  /**
-   * 로그인 처리
-   */
-  async function handleLogin() {
-    if (!email || !password) {
-      error = "이메일과 비밀번호를 모두 입력해주세요.";
+  // 로그인 버튼 눌렀을때
+  async function do_login() {
+    if (!user_name || !pw) {
+      err_msg = "사용자명과 비밀번호를 모두 입력해주세요.";
       return;
     }
 
-    isLoading = true;
-    error = "";
+    is_loading = true;
+    err_msg = "";
 
     try {
-      // 실제 로그인 API 호출
-      // const response = await loginAPI(email, password);
+      // 서버에 로그인 요청
+      const token_res = await loginAPI(user_name, pw);
+      const my_token = /** @type {any} */ (token_res).access_token;
+      
+      // 유저 정보 받아오기
+      const user_res = await get_me(my_token);
+      const user_info = /** @type {any} */ (user_res).data;
 
-      // 임시 로그인 처리
-      const user = {
-        name: email.split("@")[0],
-        email: email,
-        reputation: 100,
-      };
+      // 스토어에 저장
+      authStore.login(my_token, user_info);
 
-      dispatch("login", user);
+      dispatch("login", user_info);
       dispatch("navigate", { page: "home" });
     } catch (err) {
-      error = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+      const err_text = /** @type {Error} */ (err).message;
+      err_msg = err_text || "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.";
     } finally {
-      isLoading = false;
+      is_loading = false;
     }
   }
 
-  /**
-   * 회원가입 페이지로 이동
-   */
-  function handleGoToRegister() {
+  // 회원가입 페이지로 이동
+  function go_to_register() {
     dispatch("navigate", { page: "register" });
   }
 
-  /**
-   * 엔터 키 처리
-   * @param {any} event
-   */
-  function handleKeydown(event) {
+  // 엔터치면 로그인 실행
+  function on_key_press(event) {
     if (event?.key === "Enter") {
-      handleLogin();
+      do_login();
     }
   }
 </script>
@@ -75,26 +74,26 @@
     </div>
 
     <Card className="p-6">
-      <form on:submit|preventDefault={handleLogin} class="space-y-4">
-        {#if error}
+      <form on:submit|preventDefault={do_login} class="space-y-4">
+        {#if err_msg}
           <div
             class="p-3 bg-destructive/10 border border-destructive/20 rounded-md"
           >
-            <p class="text-sm text-destructive">{error}</p>
+            <p class="text-sm text-destructive">{err_msg}</p>
           </div>
         {/if}
 
         <div class="space-y-2">
-          <label for="email" class="text-sm font-medium text-foreground"
-            >이메일</label
+          <label for="username" class="text-sm font-medium text-foreground"
+            >사용자명</label
           >
           <Input
-            id="email"
-            type="email"
-            placeholder="example@email.com"
-            bind:value={email}
-            disabled={isLoading}
-            on:keydown={handleKeydown}
+            id="username"
+            type="text"
+            placeholder="사용자명을 입력하세요"
+            bind:value={user_name}
+            disabled={is_loading}
+            on:keydown={on_key_press}
           />
         </div>
 
@@ -106,9 +105,9 @@
             id="password"
             type="password"
             placeholder="비밀번호를 입력하세요"
-            bind:value={password}
-            disabled={isLoading}
-            on:keydown={handleKeydown}
+            bind:value={pw}
+            disabled={is_loading}
+            on:keydown={on_key_press}
           />
         </div>
 
@@ -122,8 +121,8 @@
           </button>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "로그인 중..." : "로그인"}
+        <Button type="submit" className="w-full" disabled={is_loading}>
+          {is_loading ? "로그인 중..." : "로그인"}
         </Button>
       </form>
 
@@ -132,7 +131,7 @@
           계정이 없으신가요?
           <button
             class="text-primary hover:underline font-medium"
-            on:click={handleGoToRegister}
+            on:click={go_to_register}
           >
             회원가입
           </button>

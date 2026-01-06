@@ -4,56 +4,71 @@
   import HomePage from "$lib/components/HomePage.svelte";
   import QuestionList from "$lib/components/QuestionList.svelte";
   import QuestionDetail from "$lib/components/QuestionDetail.svelte";
+  import QuestionForm from "$lib/components/QuestionForm.svelte";
   import TagsPage from "$lib/components/TagsPage.svelte";
   import UsersPage from "$lib/components/UsersPage.svelte";
   import GuidelinesPage from "$lib/components/GuidelinesPage.svelte";
   import HelpPage from "$lib/components/HelpPage.svelte";
   import LoginPage from "$lib/components/LoginPage.svelte";
   import RegisterPage from "$lib/components/RegisterPage.svelte";
+  import { authStore } from "$lib/stores/auth.js";
 
-  // 전역 상태 관리
-  let currentPage = "home";
-  /** @type {string | null} */
-  let selectedQuestionId = null;
-  /** @type {{ name: string; email?: string; reputation: number } | null} */
-  let currentUser = null;
-  let sidebarOpen = false;
+  // 상태 변수들
+  let cur_page = "home";
+  let show_q_form = false;
+  let sel_q_id = null;
+  let cur_user = null;
+  let sidebar_open = false;
 
-  /**
-   * 페이지 네비게이션 처리
-   * @param {CustomEvent} event - 네비게이션 이벤트
-   */
-  function handleNavigate(event) {
-    const { page, id } = event.detail;
-    currentPage = page;
-    selectedQuestionId = id || null;
-    sidebarOpen = false; // 모바일에서 사이드바 닫기
+  // 스토어 구독
+  authStore.subscribe(s => {
+    cur_user = s.user;
+  });
+
+  // 페이지 이동
+  function on_nav(e) {
+    const { page, id } = e.detail;
+    
+    // 질문하기는 모달로
+    if (page === "ask") {
+      show_q_form = true;
+      return;
+    }
+    
+    cur_page = page;
+    sel_q_id = id || null;
+    sidebar_open = false;
   }
 
-  /**
-   * 로그인 처리
-   * @param {CustomEvent} event - 로그인 이벤트
-   */
-  function handleLogin(event) {
-    currentUser = event.detail;
+  // 질문 작성 완료
+  function on_q_submit(e) {
+    console.log("질문 작성 완료:", e.detail);
+    show_q_form = false;
+    cur_page = "questions";
   }
 
-  /**
-   * 로그아웃 처리
-   */
-  function handleLogout() {
-    currentUser = null;
-    currentPage = "home";
+  // 질문 작성 취소
+  function on_q_cancel() {
+    show_q_form = false;
   }
 
-  /**
-   * 사이드바 토글
-   */
-  function toggleSidebar() {
-    sidebarOpen = !sidebarOpen;
+  // 로그인
+  function on_login(e) {
+    cur_user = e.detail;
   }
 
-  $: isAuthPage = currentPage === "login" || currentPage === "register";
+  // 로그아웃
+  function on_logout() {
+    authStore.logout();
+    cur_page = "home";
+  }
+
+  // 사이드바 토글
+  function toggle_sidebar() {
+    sidebar_open = !sidebar_open;
+  }
+
+  $: is_auth_page = cur_page === "login" || cur_page === "register";
 </script>
 
 <svelte:head>
@@ -61,58 +76,67 @@
   <meta name="description" content="개발자들의 질문과 답변을 나누는 커뮤니티" />
 </svelte:head>
 
-{#if isAuthPage}
-  {#if currentPage === "login"}
-    <LoginPage on:navigate={handleNavigate} on:login={handleLogin} />
-  {:else if currentPage === "register"}
-    <RegisterPage on:navigate={handleNavigate} on:login={handleLogin} />
+{#if is_auth_page}
+  {#if cur_page === "login"}
+    <LoginPage on:navigate={on_nav} on:login={on_login} />
+  {:else if cur_page === "register"}
+    <RegisterPage on:navigate={on_nav} on:login={on_login} />
   {/if}
 {:else}
   <div class="min-h-screen bg-background">
     <Header
-      {currentUser}
-      onToggleSidebar={toggleSidebar}
-      on:navigate={handleNavigate}
+      currentUser={cur_user}
+      onToggleSidebar={toggle_sidebar}
+      on:navigate={on_nav}
+      on:logout={on_logout}
     />
 
     <div class="flex min-h-screen">
       <div
-        class={`${sidebarOpen ? "block" : "hidden"} md:block fixed md:relative z-40 md:z-auto`}
+        class={`${sidebar_open ? "block" : "hidden"} md:block fixed md:relative z-40 md:z-auto`}
       >
-        <!-- Mobile overlay -->
-        {#if sidebarOpen}
+        <!-- 모바일 오버레이 -->
+        {#if sidebar_open}
           <div
             class="md:hidden fixed inset-0 bg-black/50"
-            on:click={() => (sidebarOpen = false)}
-            on:keydown={(e) => e.key === "Escape" && (sidebarOpen = false)}
+            on:click={() => (sidebar_open = false)}
+            on:keydown={(e) => e.key === "Escape" && (sidebar_open = false)}
             role="button"
             tabindex="0"
           ></div>
         {/if}
-        <Sidebar {currentPage} on:navigate={handleNavigate} />
+        <Sidebar currentPage={cur_page} on:navigate={on_nav} />
       </div>
 
-      {#if currentPage === "home"}
-        <HomePage on:navigate={handleNavigate} />
-      {:else if currentPage === "questions"}
-        <QuestionList on:navigate={handleNavigate} />
-      {:else if currentPage === "question"}
+      {#if cur_page === "home"}
+        <HomePage on:navigate={on_nav} />
+      {:else if cur_page === "questions"}
+        <QuestionList on:navigate={on_nav} />
+      {:else if cur_page === "question"}
         <QuestionDetail
-          questionId={selectedQuestionId || "1"}
-          {currentUser}
-          on:navigate={handleNavigate}
+          questionId={sel_q_id || "1"}
+          currentUser={cur_user}
+          on:navigate={on_nav}
         />
-      {:else if currentPage === "tags"}
-        <TagsPage on:navigate={handleNavigate} />
-      {:else if currentPage === "users"}
-        <UsersPage on:navigate={handleNavigate} />
-      {:else if currentPage === "guidelines"}
-        <GuidelinesPage on:navigate={handleNavigate} />
-      {:else if currentPage === "help"}
-        <HelpPage on:navigate={handleNavigate} />
+      {:else if cur_page === "tags"}
+        <TagsPage on:navigate={on_nav} />
+      {:else if cur_page === "users"}
+        <UsersPage on:navigate={on_nav} />
+      {:else if cur_page === "guidelines"}
+        <GuidelinesPage on:navigate={on_nav} />
+      {:else if cur_page === "help"}
+        <HelpPage on:navigate={on_nav} />
       {:else}
-        <HomePage on:navigate={handleNavigate} />
+        <HomePage on:navigate={on_nav} />
       {/if}
     </div>
   </div>
+{/if}
+
+<!-- 질문 작성 모달 -->
+{#if show_q_form}
+  <QuestionForm 
+    on:submit={on_q_submit} 
+    on:cancel={on_q_cancel} 
+  />
 {/if}

@@ -1,21 +1,17 @@
 <script>
   import { cn } from "$lib/utils.js";
 
-  /**
-   * @typedef {'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'} ButtonVariant
-   * @typedef {'default' | 'sm' | 'lg' | 'icon'} ButtonSize
-   */
-
-  /** @type {ButtonVariant} */
+  // 버튼 스타일
   export let variant = "default";
-  /** @type {ButtonSize} */
+  // 버튼 크기
   export let size = "default";
-  /** @type {string} */
+  // 추가 클래스
   export let className = "";
-  /** @type {boolean} */
+  // 비활성화 여부
   export let disabled = false;
 
-  const variants = {
+  // 버튼 종류별 스타일
+  const style_map = {
     default: "btn btn-primary",
     destructive: "btn bg-red-600 text-white hover:bg-red-700",
     outline: "btn btn-outline",
@@ -24,16 +20,17 @@
     link: "text-blue-600 hover:underline",
   };
 
-  const sizes = {
+  // 크기별 스타일
+  const size_map = {
     default: "",
     sm: "btn-sm",
     lg: "btn-lg",
     icon: "w-10 h-10 p-2",
   };
 
-  $: buttonClass = cn(variants[variant], sizes[size], className);
+  $: btn_class = cn(style_map[variant], size_map[size], className);
 </script>
 
-<button class={buttonClass} {disabled} on:click {...$$restProps}>
+<button class={btn_class} {disabled} on:click {...$$restProps}>
   <slot />
 </button>

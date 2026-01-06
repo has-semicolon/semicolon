@@ -1,99 +1,106 @@
 <script>
+  // ui 컴포넌트들 가져오기
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import { createEventDispatcher } from "svelte";
+  import { register as registerAPI, login as loginAPI, get_me } from "$lib/api/auth.js";
+  import { authStore } from "$lib/stores/auth.js";
 
   const dispatch = createEventDispatcher();
 
-  let formData = {
-    name: "",
+  // 입력 폼 데이터 저장하는 변수
+  let form_data = {
+    username: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    confirm_pw: "",
+    full_name: "",
   };
-  let isLoading = false;
+  let is_loading = false;
   /** @type {Record<string, string>} */
-  let errors = {};
+  let err_msg = {};
 
-  /**
-   * 폼 유효성 검사
-   * @returns {boolean} 유효성 검사 통과 여부
-   */
-  function validateForm() {
-    errors = {};
+  // 입력값 체크하는 함수
+  function check_form() {
+    err_msg = {};
 
-    if (!formData.name.trim()) {
-      errors.name = "이름을 입력해주세요.";
-    } else if (formData.name.length < 2) {
-      errors.name = "이름은 2자 이상이어야 합니다.";
+    // 유저네임 비어있는지 체크
+    if (!form_data.username.trim()) {
+      err_msg.username = "사용자명을 입력해주세요.";
+    } else if (form_data.username.length < 3) {
+      err_msg.username = "사용자명은 3자 이상이어야 합니다.";
     }
 
-    if (!formData.email.trim()) {
-      errors.email = "이메일을 입력해주세요.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "올바른 이메일 형식이 아닙니다.";
+    // 이메일 체크
+    if (!form_data.email.trim()) {
+      err_msg.email = "이메일을 입력해주세요.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form_data.email)) {
+      err_msg.email = "올바른 이메일 형식이 아닙니다.";
     }
 
-    if (!formData.password) {
-      errors.password = "비밀번호를 입력해주세요.";
-    } else if (formData.password.length < 8) {
-      errors.password = "비밀번호는 8자 이상이어야 합니다.";
+    // 비번 체크
+    if (!form_data.password) {
+      err_msg.password = "비밀번호를 입력해주세요.";
+    } else if (form_data.password.length < 8) {
+      err_msg.password = "비밀번호는 8자 이상이어야 합니다.";
     }
 
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = "비밀번호 확인을 입력해주세요.";
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = "비밀번호가 일치하지 않습니다.";
+    // 비번 확인 체크
+    if (!form_data.confirm_pw) {
+      err_msg.confirm_pw = "비밀번호 확인을 입력해주세요.";
+    } else if (form_data.password !== form_data.confirm_pw) {
+      err_msg.confirm_pw = "비밀번호가 일치하지 않습니다.";
     }
 
-    return Object.keys(errors).length === 0;
+    return Object.keys(err_msg).length === 0;
   }
 
-  /**
-   * 회원가입 처리
-   */
-  async function handleRegister() {
-    if (!validateForm()) {
+  // 회원가입 버튼 누르면 실행되는 함수
+  async function do_register() {
+    if (!check_form()) {
       return;
     }
 
-    isLoading = true;
+    is_loading = true;
 
     try {
-      // 실제 회원가입 API 호출
-      // const response = await registerAPI(formData);
+      // api 호출해서 가입 처리
+      await registerAPI({
+        username: form_data.username,
+        email: form_data.email,
+        password: form_data.password,
+        full_name: form_data.full_name || form_data.username,
+      });
 
-      // 임시 회원가입 처리
-      const user = {
-        name: formData.name,
-        email: formData.email,
-        reputation: 1,
-      };
+      // 가입 완료되면 바로 로그인 시키기
+      const token_res = await loginAPI(form_data.username, form_data.password);
+      const my_token = /** @type {any} */ (token_res).access_token;
+      const user_res = await get_me(my_token);
+      const user_info = /** @type {any} */ (user_res).data;
 
-      dispatch("login", user);
+      // 스토어에 저장해둠
+      authStore.login(my_token, user_info);
+
+      dispatch("login", user_info);
       dispatch("navigate", { page: "home" });
     } catch (err) {
-      errors.general = "회원가입에 실패했습니다. 다시 시도해주세요.";
+      const err_text = /** @type {Error} */ (err).message;
+      err_msg.general = err_text || "회원가입에 실패했습니다. 다시 시도해주세요.";
     } finally {
-      isLoading = false;
+      is_loading = false;
     }
   }
 
-  /**
-   * 로그인 페이지로 이동
-   */
-  function handleGoToLogin() {
+  // 로그인 페이지 가기
+  function go_to_login() {
     dispatch("navigate", { page: "login" });
   }
 
-  /**
-   * 엔터 키 처리
-   * @param {any} event
-   */
-  function handleKeydown(event) {
+  // 엔터치면 제출
+  function on_key_press(event) {
     if (event?.key === "Enter") {
-      handleRegister();
+      do_register();
     }
   }
 </script>
@@ -114,30 +121,30 @@
     </div>
 
     <Card className="p-6">
-      <form on:submit|preventDefault={handleRegister} class="space-y-4">
-        {#if errors.general}
+      <form on:submit|preventDefault={do_register} class="space-y-4">
+        {#if err_msg.general}
           <div
             class="p-3 bg-destructive/10 border border-destructive/20 rounded-md"
           >
-            <p class="text-sm text-destructive">{errors.general}</p>
+            <p class="text-sm text-destructive">{err_msg.general}</p>
           </div>
         {/if}
 
         <div class="space-y-2">
-          <label for="name" class="text-sm font-medium text-foreground"
-            >이름</label
+          <label for="username" class="text-sm font-medium text-foreground"
+            >사용자명</label
           >
           <Input
-            id="name"
+            id="username"
             type="text"
-            placeholder="이름을 입력하세요"
-            bind:value={formData.name}
-            disabled={isLoading}
-            className={errors.name ? "border-destructive" : ""}
-            on:keydown={handleKeydown}
+            placeholder="사용자명을 입력하세요 (3자 이상)"
+            bind:value={form_data.username}
+            disabled={is_loading}
+            className={err_msg.username ? "border-destructive" : ""}
+            on:keydown={on_key_press}
           />
-          {#if errors.name}
-            <p class="text-sm text-destructive">{errors.name}</p>
+          {#if err_msg.username}
+            <p class="text-sm text-destructive">{err_msg.username}</p>
           {/if}
         </div>
 
@@ -149,13 +156,13 @@
             id="email"
             type="email"
             placeholder="example@email.com"
-            bind:value={formData.email}
-            disabled={isLoading}
-            className={errors.email ? "border-destructive" : ""}
-            on:keydown={handleKeydown}
+            bind:value={form_data.email}
+            disabled={is_loading}
+            className={err_msg.email ? "border-destructive" : ""}
+            on:keydown={on_key_press}
           />
-          {#if errors.email}
-            <p class="text-sm text-destructive">{errors.email}</p>
+          {#if err_msg.email}
+            <p class="text-sm text-destructive">{err_msg.email}</p>
           {/if}
         </div>
 
@@ -167,32 +174,32 @@
             id="password"
             type="password"
             placeholder="8자 이상의 비밀번호"
-            bind:value={formData.password}
-            disabled={isLoading}
-            className={errors.password ? "border-destructive" : ""}
-            on:keydown={handleKeydown}
+            bind:value={form_data.password}
+            disabled={is_loading}
+            className={err_msg.password ? "border-destructive" : ""}
+            on:keydown={on_key_press}
           />
-          {#if errors.password}
-            <p class="text-sm text-destructive">{errors.password}</p>
+          {#if err_msg.password}
+            <p class="text-sm text-destructive">{err_msg.password}</p>
           {/if}
         </div>
 
         <div class="space-y-2">
           <label
-            for="confirmPassword"
+            for="confirm_pw"
             class="text-sm font-medium text-foreground">비밀번호 확인</label
           >
           <Input
-            id="confirmPassword"
+            id="confirm_pw"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
-            bind:value={formData.confirmPassword}
-            disabled={isLoading}
-            className={errors.confirmPassword ? "border-destructive" : ""}
-            on:keydown={handleKeydown}
+            bind:value={form_data.confirm_pw}
+            disabled={is_loading}
+            className={err_msg.confirm_pw ? "border-destructive" : ""}
+            on:keydown={on_key_press}
           />
-          {#if errors.confirmPassword}
-            <p class="text-sm text-destructive">{errors.confirmPassword}</p>
+          {#if err_msg.confirm_pw}
+            <p class="text-sm text-destructive">{err_msg.confirm_pw}</p>
           {/if}
         </div>
 
@@ -211,8 +218,8 @@
           </label>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "가입 중..." : "회원가입"}
+        <Button type="submit" className="w-full" disabled={is_loading}>
+          {is_loading ? "가입 중..." : "회원가입"}
         </Button>
       </form>
 
@@ -221,7 +228,7 @@
           이미 계정이 있으신가요?
           <button
             class="text-primary hover:underline font-medium"
-            on:click={handleGoToLogin}
+            on:click={go_to_login}
           >
             로그인
           </button>

@@ -7,15 +7,13 @@
 
   const dispatch = createEventDispatcher();
 
-  /**
-   * 페이지 이동 이벤트 발생
-   * @param {string} page - 이동할 페이지
-   */
-  function handleNavigate(page) {
+  // 페이지 이동
+  function go_to(page) {
     dispatch("navigate", { page });
   }
 
-  const menuItems = [
+  // 메인 메뉴 아이템들
+  const main_menu = [
     {
       id: "home",
       label: "홈",
@@ -38,7 +36,8 @@
     },
   ];
 
-  const communityItems = [
+  // 커뮤니티 메뉴
+  const sub_menu = [
     {
       id: "guidelines",
       label: "가이드라인",
@@ -54,12 +53,12 @@
 
 <aside class="w-64 bg-background border-r min-h-screen">
   <div class="p-4">
-    <!-- Main Navigation -->
+    <!-- 메인 메뉴 -->
     <nav class="space-y-2">
-      {#each menuItems as item (item.id)}
+      {#each main_menu as item (item.id)}
         <button
           class={cn("nav-button", currentPage === item.id ? "active" : "")}
-          on:click={() => handleNavigate(item.id)}
+          on:click={() => go_to(item.id)}
         >
           <svg
             class="w-5 h-5 mr-3"
@@ -79,10 +78,10 @@
       {/each}
     </nav>
 
-    <!-- Divider -->
+    <!-- 구분선 -->
     <div class="my-6 border-t"></div>
 
-    <!-- Community Section -->
+    <!-- 커뮤니티 섹션 -->
     <div>
       <h3
         class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3"
@@ -90,10 +89,10 @@
         커뮤니티
       </h3>
       <nav class="space-y-2">
-        {#each communityItems as item (item.id)}
+        {#each sub_menu as item (item.id)}
           <button
             class={cn("nav-button", currentPage === item.id ? "active" : "")}
-            on:click={() => handleNavigate(item.id)}
+            on:click={() => go_to(item.id)}
           >
             <svg
               class="w-5 h-5 mr-3"
@@ -114,7 +113,7 @@
       </nav>
     </div>
 
-    <!-- Stats Section -->
+    <!-- 활동 통계 -->
     <div class="mt-8 p-3 bg-muted rounded-lg">
       <h4 class="text-sm font-medium mb-2">활동 통계</h4>
       <div class="space-y-2 text-sm text-muted-foreground">

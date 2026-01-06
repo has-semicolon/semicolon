@@ -3,74 +3,76 @@
 
   const dispatch = createEventDispatcher();
 
-  const users = [
+  // 유저 데이터 (나중에 서버에서 받아올거임)
+  const user_list = [
     {
       id: "1",
       name: "개발자123",
       email: "dev123@example.com",
-      reputation: 1250,
-      questionsCount: 45,
-      answersCount: 128,
-      joinDate: "2024. 3. 15.",
+      point: 1250,
+      q_count: 45,
+      a_count: 128,
+      join_date: "2024. 3. 15.",
     },
     {
       id: "2",
       name: "프론트엔드러",
       email: "frontend@example.com",
-      reputation: 2340,
-      questionsCount: 67,
-      answersCount: 203,
-      joinDate: "2023. 11. 8.",
+      point: 2340,
+      q_count: 67,
+      a_count: 203,
+      join_date: "2023. 11. 8.",
     },
     {
       id: "3",
       name: "타입마스터",
       email: "typemaster@example.com",
-      reputation: 1890,
-      questionsCount: 32,
-      answersCount: 165,
-      joinDate: "2024. 1. 22.",
+      point: 1890,
+      q_count: 32,
+      a_count: 165,
+      join_date: "2024. 1. 22.",
     },
     {
       id: "4",
       name: "백엔드개발",
       email: "backend@example.com",
-      reputation: 1540,
-      questionsCount: 28,
-      answersCount: 142,
-      joinDate: "2024. 2. 10.",
+      point: 1540,
+      q_count: 28,
+      a_count: 142,
+      join_date: "2024. 2. 10.",
     },
     {
       id: "5",
       name: "풀스택닌자",
       email: "fullstack@example.com",
-      reputation: 3100,
-      questionsCount: 89,
-      answersCount: 267,
-      joinDate: "2023. 8. 5.",
+      point: 3100,
+      q_count: 89,
+      a_count: 267,
+      join_date: "2023. 8. 5.",
     },
     {
       id: "6",
       name: "리액트러버",
       email: "reactlover@example.com",
-      reputation: 980,
-      questionsCount: 21,
-      answersCount: 87,
-      joinDate: "2024. 5. 3.",
+      point: 980,
+      q_count: 21,
+      a_count: 87,
+      join_date: "2024. 5. 3.",
     },
   ];
 
-  let searchQuery = "";
-  let sortBy = "reputation";
+  let search_word = "";
+  let sort_type = "reputation";
 
-  $: filteredUsers = users
-    .filter((user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // 검색하고 정렬하기
+  $: filtered = user_list
+    .filter((u) =>
+      u.name.toLowerCase().includes(search_word.toLowerCase())
     )
     .sort((a, b) => {
-      if (sortBy === "reputation") return b.reputation - a.reputation;
-      if (sortBy === "questions") return b.questionsCount - a.questionsCount;
-      if (sortBy === "answers") return b.answersCount - a.answersCount;
+      if (sort_type === "reputation") return b.point - a.point;
+      if (sort_type === "questions") return b.q_count - a.q_count;
+      if (sort_type === "answers") return b.a_count - a.a_count;
       return 0;
     });
 </script>
@@ -84,17 +86,17 @@
       </p>
 
       <div class="flex flex-col md:flex-row gap-4 mb-6">
-        <!-- Search Bar -->
+        <!-- 검색바 -->
         <input
           type="text"
-          bind:value={searchQuery}
+          bind:value={search_word}
           placeholder="사용자 검색..."
           class="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        <!-- Sort Options -->
+        <!-- 정렬 옵션 -->
         <select
-          bind:value={sortBy}
+          bind:value={sort_type}
           class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="reputation">평판 순</option>
@@ -104,40 +106,40 @@
       </div>
     </div>
 
-    <!-- Users Grid -->
+    <!-- 유저 그리드 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {#each filteredUsers as user (user.id)}
+      {#each filtered as u (u.id)}
         <div class="user-card p-6 bg-card rounded-lg border hover:border-primary transition-all">
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                 <span class="text-xl font-bold text-primary">
-                  {user.name[0]}
+                  {u.name[0]}
                 </span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold">{user.name}</h3>
-                <p class="text-sm text-muted-foreground">{user.email}</p>
+                <h3 class="text-lg font-semibold">{u.name}</h3>
+                <p class="text-sm text-muted-foreground">{u.email}</p>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-2xl font-bold text-primary">{user.reputation}</div>
+              <div class="text-2xl font-bold text-primary">{u.point}</div>
               <div class="text-xs text-muted-foreground">평판</div>
             </div>
           </div>
 
           <div class="grid grid-cols-3 gap-4 pt-4 border-t">
             <div class="text-center">
-              <div class="text-lg font-semibold">{user.questionsCount}</div>
+              <div class="text-lg font-semibold">{u.q_count}</div>
               <div class="text-xs text-muted-foreground">질문</div>
             </div>
             <div class="text-center">
-              <div class="text-lg font-semibold">{user.answersCount}</div>
+              <div class="text-lg font-semibold">{u.a_count}</div>
               <div class="text-xs text-muted-foreground">답변</div>
             </div>
             <div class="text-center">
               <div class="text-xs text-muted-foreground mt-2">
-                가입일<br />{user.joinDate}
+                가입일<br />{u.join_date}
               </div>
             </div>
           </div>
@@ -145,7 +147,7 @@
       {/each}
     </div>
 
-    {#if filteredUsers.length === 0}
+    {#if filtered.length === 0}}
       <div class="text-center py-12">
         <p class="text-muted-foreground">검색 결과가 없습니다.</p>
       </div>

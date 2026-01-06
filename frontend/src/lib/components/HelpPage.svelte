@@ -1,9 +1,11 @@
 <script>
+  // svelte dispatcher 쓰기
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
-  const faqs = [
+  // faq 데이터
+  const faq_list = [
     {
       category: "시작하기",
       questions: [
@@ -83,12 +85,15 @@
     },
   ];
 
-  let expandedIndex = {};
+  // 열림 상태
+  /** @type {Record<string, boolean>} */
+  let open = {};
 
-  function toggleFaq(categoryIndex, questionIndex) {
-    const key = `${categoryIndex}-${questionIndex}`;
-    expandedIndex[key] = !expandedIndex[key];
-    expandedIndex = expandedIndex; // trigger reactivity
+  // 아코디언 토글
+  function toggle_faq(cat_i, q_i) {
+    const k = `${cat_i}-${q_i}`;
+    open[k] = !open[k];
+    open = open; // svelte 반응성 트리거
   }
 </script>
 
@@ -96,77 +101,62 @@
   <div class="max-w-4xl mx-auto">
     <div class="mb-8">
       <h1 class="text-4xl font-bold mb-4">도움말</h1>
-      <p class="text-lg text-muted-foreground mb-6">
+      <p class="text-lg text-muted-foreground">
         Semicolon 사용에 대한 자주 묻는 질문과 답변입니다.
       </p>
-
-      <!-- Quick Links -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        <button
-          class="p-3 bg-card rounded-lg border hover:border-primary transition-colors text-sm"
-          on:click={() => dispatch("navigate", { page: "guidelines" })}
-        >
-          📋 가이드라인
-        </button>
-        <button
-          class="p-3 bg-card rounded-lg border hover:border-primary transition-colors text-sm"
-          on:click={() => dispatch("navigate", { page: "questions" })}
-        >
-          💬 질문하기
-        </button>
-        <button
-          class="p-3 bg-card rounded-lg border hover:border-primary transition-colors text-sm"
-          on:click={() => dispatch("navigate", { page: "tags" })}
-        >
-          🏷️ 태그 보기
-        </button>
-        <button
-          class="p-3 bg-card rounded-lg border hover:border-primary transition-colors text-sm"
-          on:click={() => dispatch("navigate", { page: "users" })}
-        >
-          👥 사용자
-        </button>
-      </div>
     </div>
 
-    <!-- FAQ Sections -->
-    <div class="space-y-8">
-      {#each faqs as category, categoryIndex (category.category)}
-        <div>
+    <!-- faq 섹션 -->
+    <div class="space-y-6">
+      {#each faq_list as cat, cat_i (cat.category)}
+        <div class="p-6 bg-card rounded-lg border">
           <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
             <span class="w-2 h-8 bg-primary rounded"></span>
-            {category.category}
+            {cat.category}
           </h2>
           <div class="space-y-3">
-            {#each category.questions as faq, questionIndex (faq.q)}
-              {@const key = `${categoryIndex}-${questionIndex}`}
-              <div class="bg-card rounded-lg border overflow-hidden">
+            {#each cat.questions as item, q_i (item.q)}
+              {@const k = `${cat_i}-${q_i}`}
+              <div class="p-4 bg-card rounded-lg border shadow-sm hover:border-primary/30 transition-colors">
                 <button
-                  class="w-full p-4 text-left hover:bg-accent transition-colors flex items-center justify-between gap-4"
-                  on:click={() => toggleFaq(categoryIndex, questionIndex)}
+                  class="w-full text-left group"
+                  on:click={() => toggle_faq(cat_i, q_i)}
                 >
-                  <span class="font-semibold">{faq.q}</span>
-                  <svg
-                    class="w-5 h-5 flex-shrink-0 transition-transform {expandedIndex[
-                      key
-                    ]
-                      ? 'rotate-180'
-                      : ''}"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                  <div class="flex items-start justify-between gap-4">
+                    <h3 class="font-semibold group-hover:text-primary transition-colors flex items-center gap-2">
+                      <svg
+                        class="w-5 h-5 text-primary flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {item.q}
+                    </h3>
+                    <svg
+                      class="w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform {open[k] ? 'rotate-180' : ''}"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
                 </button>
-                {#if expandedIndex[key]}
-                  <div class="px-4 pb-4 text-muted-foreground border-t pt-4">
-                    {faq.a}
+                {#if open[k]}
+                  <div class="mt-3 pt-3 border-t text-muted-foreground leading-relaxed">
+                    {item.a}
                   </div>
                 {/if}
               </div>
@@ -176,16 +166,86 @@
       {/each}
     </div>
 
-    <!-- Contact Section -->
-    <div class="mt-12 p-6 bg-primary/10 rounded-lg border border-primary">
+    <!-- 빠른 링크 -->
+    <div class="mt-8 p-6 bg-card rounded-lg border">
+      <h3 class="text-xl font-bold mb-4">빠른 링크</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <button
+          class="p-4 bg-background rounded-lg border hover:border-primary transition-colors text-left group"
+          on:click={() => dispatch("navigate", { page: "guidelines" })}
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <div class="font-semibold group-hover:text-primary transition-colors">커뮤니티 가이드라인</div>
+              <div class="text-sm text-muted-foreground">규칙과 모범 사례</div>
+            </div>
+          </div>
+        </button>
+        <button
+          class="p-4 bg-background rounded-lg border hover:border-primary transition-colors text-left group"
+          on:click={() => dispatch("navigate", { page: "questions" })}
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <div class="font-semibold group-hover:text-primary transition-colors">질문 둘러보기</div>
+              <div class="text-sm text-muted-foreground">다른 질문들 보기</div>
+            </div>
+          </div>
+        </button>
+        <button
+          class="p-4 bg-background rounded-lg border hover:border-primary transition-colors text-left group"
+          on:click={() => dispatch("navigate", { page: "tags" })}
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <div>
+              <div class="font-semibold group-hover:text-primary transition-colors">태그 탐색</div>
+              <div class="text-sm text-muted-foreground">주제별로 찾기</div>
+            </div>
+          </div>
+        </button>
+        <button
+          class="p-4 bg-background rounded-lg border hover:border-primary transition-colors text-left group"
+          on:click={() => dispatch("navigate", { page: "users" })}
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div>
+              <div class="font-semibold group-hover:text-primary transition-colors">사용자 보기</div>
+              <div class="text-sm text-muted-foreground">커뮤니티 멤버들</div>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 문의 섹션 -->
+    <div class="mt-8 p-6 bg-primary/10 rounded-lg border border-primary">
       <h3 class="text-xl font-bold mb-3">답변을 찾지 못하셨나요?</h3>
       <p class="text-muted-foreground mb-4">
-        추가 질문이 있으시면 커뮤니티에 질문을 올려주세요. 다른 사용자들이 도와드릴
-        것입니다.
+        추가 질문이 있으시면 커뮤니티에 질문을 올려주세요. 다른 사용자들이 도와드릴 것입니다.
       </p>
       <button
         class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-        on:click={() => dispatch("navigate", { page: "questions" })}
+        on:click={() => dispatch("navigate", { page: "ask" })}
       >
         질문하러 가기
       </button>
