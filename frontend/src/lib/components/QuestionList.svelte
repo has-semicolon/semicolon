@@ -45,10 +45,22 @@
         params.sort_by = 'views';
       }
       
-      const data = await get_questions(params);
+      const result = await get_questions(params);
+      console.log('API 응답:', result);
+      
       // API 응답 형식: { success: true, data: [...] }
-      const questions = data.data || data.items || data;
-      const total_count = data.total || questions.length;
+      // data가 배열인지 확인
+      let questions = [];
+      if (Array.isArray(result)) {
+        questions = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        questions = result.data;
+      } else if (result.items && Array.isArray(result.items)) {
+        questions = result.items;
+      }
+      
+      console.log('추출된 질문 목록:', questions);
+      const total_count = result.total || questions.length;
       questions_store.set_list(questions, total_count);
     } catch (err) {
       console.error('질문 목록 불러오기 실패:', err);
