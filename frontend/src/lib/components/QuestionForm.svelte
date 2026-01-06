@@ -1,32 +1,55 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { create_question } from "$lib/api/questions.js";
+  import { questions_store } from "$lib/stores/questions.js";
+  import { authStore } from "$lib/stores/auth.js";
 
   const dispatch = createEventDispatcher();
+
+  // 현재 사용자 정보
+  let current_user = null;
+  authStore.subscribe(s => {
+    current_user = s.user;
+  });
+
+  // 컴포넌트 마운트 시 로그
+  onMount(() => {
+    console.log("QuestionForm 마운트됨, 현재 사용자:", current_user);
+  });
 
   // 입력값들
   let q_title = "";
   let q_content = "";
   let q_tags = "";
   let is_sending = false;
+  let err_msg = "";
 
   // 취소 버튼
   function on_cancel() {
+    console.log("취소 버튼 클릭됨");
     dispatch("cancel");
   }
 
   // 제출 버튼
   async function on_submit() {
+    // 로그인 확인
+    if (!current_user) {
+      err_msg = "질문을 작성하려면 먼저 로그인해주세요.";
+      return;
+    }
+
     // 체크
     if (!q_title.trim()) {
-      alert("제목을 입력해주세요.");
+      err_msg = "제목을 입력해주세요.";
       return;
     }
     if (!q_content.trim()) {
-      alert("내용을 입력해주세요.");
+      err_msg = "내용을 입력해주세요.";
       return;
     }
 
     is_sending = true;
+    err_msg = "";
 
     try {
       // 태그 배열로 만들기 (쉼표나 공백으로 구분)
@@ -41,16 +64,19 @@
         tags: tag_arr,
       };
 
-      // TODO: 나중에 백엔드 연결할때
-      // POST /api/v1/questions/
+      // API 호출하여 질문 작성
+      const result = await create_question(data);
+      // API 응답 형식: { success: true, data: {...} }
+      const new_question = result.data || result;
+      
+      // 스토어에 추가
+      questions_store.add_question(new_question);
 
-      console.log("질문 데이터:", data);
-
-      alert("질문이 작성되었습니다!");
-      dispatch("submit", data);
+      dispatch("submit", new_question);
+      dispatch("cancel"); // 모달 닫기
     } catch (e) {
       console.error("질문 작성 실패:", e);
-      alert("질문 작성에 실패했습니다. 다시 시도해주세요.");
+      err_msg = e.message || "질문 작성에 실패했습니다. 다시 시도해주세요.";
     } finally {
       is_sending = false;
     }
@@ -58,7 +84,11 @@
 </script>
 
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-  <div class="bg-background rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+  <div 
+    class="bg-background rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+    on:click={(e) => e.stopPropagation()}
+    role="dialog"
+  >
     <div class="sticky top-0 bg-background border-b p-6">
       <h2 class="text-2xl font-bold">질문하기</h2>
       <p class="text-sm text-muted-foreground mt-1">
@@ -67,6 +97,13 @@
     </div>
 
     <form on:submit|preventDefault={on_submit} class="p-6 space-y-6">
+      <!-- 에러 메시지 -->
+      {#if err_msg}
+        <div class="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p class="text-sm text-destructive">{err_msg}</p>
+        </div>
+      {/if}
+
       <!-- 제목 -->
       <div>
         <label for="title" class="block text-sm font-medium mb-2">

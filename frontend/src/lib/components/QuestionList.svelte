@@ -1,17 +1,70 @@
 <script>
   import QuestionCard from "$lib/components/QuestionCard.svelte";
   import Button from "$lib/components/ui/Button.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { questions_store } from "$lib/stores/questions.js";
+  import { get_questions } from "$lib/api/questions.js";
 
   const dispatch = createEventDispatcher();
+
+  // 질문 스토어 구독
+  let q_list = [];
+  let loading = false;
+  let error = null;
+  let total = 0;
+  let cur_page = 1;
+
+  questions_store.subscribe(s => {
+    q_list = s.list;
+    loading = s.loading;
+    error = s.error;
+    total = s.total;
+    cur_page = s.page;
+  });
 
   // 네비게이션 이벤트 전달하는 함수
   function on_nav(event) {
     dispatch("navigate", event.detail);
   }
 
-  // 샘플 데이터 (나중에 api에서 받아올거임)
-  const q_list = [
+  // API에서 질문 목록 가져오기
+  async function load_questions(page = 1) {
+    try {
+      questions_store.set_loading(true);
+      questions_store.set_page(page);
+      
+      const params = {
+        skip: (page - 1) * 20,
+        limit: 20,
+      };
+      
+      // 정렬 조건 추가
+      if (sort_type === 'votes') {
+        params.sort_by = 'votes';
+      } else if (sort_type === 'views') {
+        params.sort_by = 'views';
+      }
+      
+      const data = await get_questions(params);
+      // API 응답 형식: { success: true, data: [...] }
+      const questions = data.data || data.items || data;
+      const total_count = data.total || questions.length;
+      questions_store.set_list(questions, total_count);
+    } catch (err) {
+      console.error('질문 목록 불러오기 실패:', err);
+      questions_store.set_error(err.message);
+    } finally {
+      questions_store.set_loading(false);
+    }
+  }
+
+  // 컴포넌트 마운트될 때 질문 목록 가져오기
+  onMount(() => {
+    load_questions();
+  });
+
+  // 샘플 데이터 제거 (이제 API 사용)
+  /*const q_list = [
     {
       id: "1",
       title: "React에서 useState를 사용할 때 비동기 문제를 어떻게 해결하나요?",
@@ -77,7 +130,7 @@
       tags: ["nodejs", "memory-management", "performance"],
       hasAcceptedAnswer: false,
     },
-  ];
+  ];*/
 
   let sort_type = "newest";
   const sort_list = [
@@ -87,22 +140,28 @@
     { value: "views", label: "조회순" },
   ];
 
-  // 정렬된 질문 목록 (sort_type 바뀌면 자동으로 재계산)
-  $: sorted_list = [...q_list].sort((a, b) => {
-    switch (sort_type) {
-      case "votes":
-        return b.votes - a.votes;
-      case "answers":
-        return b.answers - a.answers;
-      case "views":
-        return b.views - a.views;
-      case "newest":
-      default:
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+  // 정렬 방식 변경시 다시 로드
+  let prev_sort = sort_type;
+  $: if (sort_type !== prev_sort) {
+    prev_sort = sort_type;
+    load_questions(cur_page);
+  }
+
+  // 페이지 변경
+  function go_to_page(page) {
+    if (page >= 1 && page <= total_pages) {
+      load_questions(page);
     }
-  });
+  }
+
+  // 총 페이지 수 계산
+  $: total_pages = Math.ceil(total / 20) || 1;
+  
+  // 페이지 번호 목록 생성 (현재 페이지 주변 5개)
+  $: page_nums = Array.from({ length: Math.min(5, total_pages) }, (_, i) => {
+    const start = Math.max(1, Math.min(cur_page - 2, total_pages - 4));
+    return start + i;
+  }).filter(p => p <= total_pages);
 </script>
 
 <main class="flex-1 p-6">
@@ -123,11 +182,28 @@
       </Button>
     </div>
 
+    <!-- 로딩 중 -->
+    {#if loading}
+      <div class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p class="text-muted-foreground">질문을 불러오는 중...</p>
+        </div>
+      </div>
+    {:else if error}
+      <!-- 에러 발생 -->
+      <div class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <p class="text-destructive mb-4">❌ {error}</p>
+          <Button on:click={() => load_questions(cur_page)}>다시 시도</Button>
+        </div>
+      </div>
+    {:else}
     <!-- 필터랑 정렬 -->
     <div class="flex items-center justify-between mb-6 pb-4 border-b">
       <div class="flex items-center space-x-4">
         <span class="text-sm text-muted-foreground">
-          총 {q_list.length}개의 질문
+          총 {total}개의 질문
         </span>
       </div>
 
@@ -145,19 +221,51 @@
     </div>
 
     <!-- 질문 리스트 -->
-    <div class="space-y-4">
-      {#each sorted_list as q (q.id)}
-        <QuestionCard question={q} on:navigate={on_nav} />
-      {/each}
-    </div>
+    {#if q_list.length === 0}
+      <div class="text-center py-12">
+        <p class="text-muted-foreground mb-4">아직 질문이 없습니다.</p>
+        <Button on:click={() => dispatch("navigate", { page: "ask" })}>
+          첫 질문 작성하기
+        </Button>
+      </div>
+    {:else}
+      <div class="space-y-4">
+        {#each q_list as q (q.id)}
+          <QuestionCard question={q} on:navigate={on_nav} />
+        {/each}
+      </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-center mt-8 space-x-2">
-      <Button variant="outline" size="sm" disabled>이전</Button>
-      <Button variant="default" size="sm">1</Button>
-      <Button variant="outline" size="sm">2</Button>
-      <Button variant="outline" size="sm">3</Button>
-      <Button variant="outline" size="sm">다음</Button>
-    </div>
+      <!-- Pagination -->
+      <div class="flex items-center justify-center mt-8 space-x-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          disabled={cur_page === 1}
+          on:click={() => go_to_page(cur_page - 1)}
+        >
+          이전
+        </Button>
+        
+        {#each page_nums as page_num}
+          <Button 
+            variant={page_num === cur_page ? "default" : "outline"} 
+            size="sm"
+            on:click={() => go_to_page(page_num)}
+          >
+            {page_num}
+          </Button>
+        {/each}
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          disabled={cur_page === total_pages}
+          on:click={() => go_to_page(cur_page + 1)}
+        >
+          다음
+        </Button>
+      </div>
+    {/if}
+    {/if}
   </div>
 </main>

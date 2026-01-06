@@ -2,7 +2,10 @@
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
   import Badge from "$lib/components/ui/Badge.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { question_detail_store } from "$lib/stores/questions.js";
+  import { get_question, get_question_answers } from "$lib/api/questions.js";
+  import { create_answer } from "$lib/api/answers.js";
 
   /** @type {string} */
   export let questionId;
@@ -20,13 +23,68 @@
 
   const dispatch = createEventDispatcher();
 
+  // 스토어 구독
+  let q_data = null;
+  let ans_list = [];
+  let loading = false;
+  let error = null;
+
+  question_detail_store.subscribe(s => {
+    q_data = s.question;
+    ans_list = s.answers;
+    loading = s.loading;
+    error = s.error;
+  });
+
   // 페이지 이동
   function go_to(page) {
     dispatch("navigate", { page });
   }
 
-  // 샘플 질문 데이터 (나중에 api로 받아올거)
-  const q_data = {
+  // API에서 질문 정보 불러오기
+  async function load_question() {
+    try {
+      question_detail_store.set_loading(true);
+      
+      // 질문 상세 정보
+      const q_result = await get_question(questionId);
+      // API 응답 형식: { success: true, data: {...} }
+      const q = q_result.data || q_result;
+      question_detail_store.set_question(q);
+      
+      // 답변 목록
+      const ans_result = await get_question_answers(questionId);
+      const answers = ans_result.data || ans_result;
+      question_detail_store.set_answers(Array.isArray(answers) ? answers : []);
+      
+    } catch (err) {
+      console.error('질문 불러오기 실패:', err);
+      question_detail_store.set_error(err.message);
+    } finally {
+      question_detail_store.set_loading(false);
+    }
+  }
+
+  // 컴포넌트 마운트될 때 불러오기
+  onMount(() => {
+    load_question();
+  });
+
+  // questionId 바뀔면 다시 불러오기
+  $: if (questionId) {
+    load_question();
+  }
+
+  // 답변 작성 및 UI 상태 변수
+  let new_ans = "";
+  let my_vote = 0; // -1: 비추, 0: 없음, 1: 추천
+  /** @type {Record<string, boolean>} */
+  let show_cmt_form = {}; // 답변별 댓글폼 보이기
+  /** @type {Record<string, string>} */
+  let new_cmt = {}; // 답변별 댓글 내용
+
+  // 샘플 데이터 제거됨 (이제 API 사용)
+  /*const q_data = {
     id: questionId,
     title: "React에서 useState를 사용할 때 비동기 문제를 어떻게 해결하나요?",
     content: `setState를 호출한 후 바로 state 값을 참조하면 이전 값이 나오는 문제가 있습니다.
@@ -49,89 +107,7 @@ const handleClick = () => {
     votes: 5,
     tags: ["react", "javascript", "useState"],
     has_best: true,
-  };
-
-  // 답변 리스트
-  const ans_list = [
-    {
-      id: "1",
-      content: `useState의 setter는 비동기적으로 동작하기 때문에 setState 호출 직후에는 이전 값이 참조됩니다.
-
-해결 방법은 여러 가지가 있습니다:
-
-1. **useEffect 사용:**
-\`\`\`javascript
-useEffect(() => {
-  console.log(count); // 업데이트된 값
-}, [count]);
-\`\`\`
-
-2. **함수형 업데이트 사용:**
-\`\`\`javascript
-setCount(prevCount => {
-  const newCount = prevCount + 1;
-  console.log(newCount); // 새로운 값
-  return newCount;
-});
-\`\`\`
-
-3. **지역 변수 사용:**
-\`\`\`javascript
-const newCount = count + 1;
-setCount(newCount);
-console.log(newCount); // 새로운 값
-\`\`\``,
-      author: "React전문가",
-      author_point: 3450,
-      createdAt: "2024-01-15T11:15:00Z",
-      votes: 8,
-      is_best: true,
-      comments: [
-        {
-          id: "c1",
-          content: "useEffect를 사용하는 방법이 가장 일반적이네요. 감사합니다!",
-          author: "초보개발자",
-          createdAt: "2024-01-15T11:30:00Z",
-        },
-        {
-          id: "c2",
-          content: "함수형 업데이트 방법을 몰랐는데 유용할 것 같습니다.",
-          author: "개발자123",
-          createdAt: "2024-01-15T11:45:00Z",
-        },
-      ],
-    },
-    {
-      id: "2",
-      content: `추가로 useRef를 사용하는 방법도 있습니다:
-
-\`\`\`javascript
-const countRef = useRef(count);
-
-const handleClick = () => {
-  const newCount = count + 1;
-  setCount(newCount);
-  countRef.current = newCount;
-  console.log(countRef.current); // 업데이트된 값
-};
-\`\`\`
-
-이 방법은 즉시 업데이트된 값이 필요한 경우에 유용합니다.`,
-      author: "프론트개발자",
-      author_point: 890,
-      createdAt: "2024-01-15T12:30:00Z",
-      votes: 3,
-      is_best: false,
-      comments: [],
-    },
-  ];
-
-  let new_ans = "";
-  let my_vote = 0; // -1: 비추, 0: 없음, 1: 추천
-  /** @type {Record<string, boolean>} */
-  let show_cmt_form = {}; // 답변별 댓글폼 보이기
-  /** @type {Record<string, string>} */
-  let new_cmt = {}; // 답변별 댓글 내용
+  };*/
 
   // 추천/비추 처리
   function do_vote(val) {

@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
 
-    # Database
-    DATABASE_URL: str = "sqlite:///./semicolon.db"
+    # Database - .env에서 PostgreSQL URL 사용
+    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/semicolon"
 
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        case_sensitive = True
 
 
 settings = Settings()

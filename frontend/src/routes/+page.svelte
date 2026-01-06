@@ -29,9 +29,13 @@
   function on_nav(e) {
     const { page, id } = e.detail;
     
+    console.log("페이지 이동:", page, id);
+    
     // 질문하기는 모달로
     if (page === "ask") {
+      console.log("질문하기 모달 열기, show_q_form =", show_q_form);
       show_q_form = true;
+      console.log("질문하기 모달 열림, show_q_form =", show_q_form);
       return;
     }
     
